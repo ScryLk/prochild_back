@@ -1,0 +1,228 @@
+openapi: 3.0.3
+info:
+  title: API de Gerenciamento de Treinamentos
+  description: API para gerenciamento de treinamentos, seções e categorias
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:5000
+    description: Servidor de Desenvolvimento
+
+paths:
+  /trainings:
+    get:
+      summary: Obter todos os treinamentos
+      responses:
+        '200':
+          description: Lista de treinamentos obtida com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  trainings:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        categoria_id: { type: integer }
+                        titulo: { type: string }
+                        tamanho: { type: string }
+                        descricao: { type: string }
+                        arquivo_nome: { type: string }
+                        arquivo_caminho: { type: string }
+                        created_at: { type: string }
+                        updated_at: { type: string }
+    post:
+      summary: Criar novo treinamento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoria_id: { type: integer }
+                titulo: { type: string }
+                tamanho: { type: string }
+                descricao: { type: string }
+                arquivo_nome: { type: string }
+                arquivo_caminho: { type: string }
+      responses:
+        '200':
+          description: Treinamento cadastrado com sucesso
+
+  /trainings/{trainingId}:
+    put:
+      summary: Atualizar treinamento existente
+      parameters:
+        - name: trainingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                categoria_id: { type: integer }
+                titulo: { type: string }
+                descricao: { type: string }
+                arquivo_nome: { type: string }
+                arquivo_caminho: { type: string }
+                tamanho: { type: string }
+      responses:
+        '200':
+          description: Treinamento atualizado com sucesso
+    delete:
+      summary: Deletar treinamento
+      parameters:
+        - name: trainingId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Treinamento deletado com sucesso
+
+  /sections:
+    get:
+      summary: Obter todas as seções
+      responses:
+        '200':
+          description: Lista de seções
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        nome: { type: string }
+                        created_at: { type: string }
+                        updated_at: { type: string }
+    post:
+      summary: Criar nova seção
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+      responses:
+        '200':
+          description: Seção criada com sucesso
+
+  /sections/{sectionId}:
+    put:
+      summary: Atualizar seção
+      parameters:
+        - name: sectionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+      responses:
+        '200':
+          description: Seção atualizada com sucesso
+    delete:
+      summary: Deletar seção
+      parameters:
+        - name: sectionId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Seção deletada com sucesso
+
+  /categories:
+    get:
+      summary: Obter todas as categorias
+      responses:
+        '200':
+          description: Lista de categorias
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer }
+                        secao_id: { type: integer }
+                        nome: { type: string }
+                        icone_svg: { type: string }
+                        created_at: { type: string }
+                        updated_at: { type: string }
+    post:
+      summary: Criar nova categoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secao_id: { type: integer }
+                nome: { type: string }
+                icone_svg: { type: string }
+      responses:
+        '200':
+          description: Categoria criada com sucesso
+
+  /categories/{categoryId}:
+    put:
+      summary: Atualizar categoria
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secao_id: { type: integer }
+                nome: { type: string }
+                icone_svg: { type: string }
+      responses:
+        '200':
+          description: Categoria atualizada com sucesso
+    delete:
+      summary: Deletar categoria
+      parameters:
+        - name: categoryId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Categoria deletada com sucesso
