@@ -7,6 +7,9 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from password_strength import PasswordPolicy
 from django.contrib.auth.hashers import check_password
+import uuid
+from datetime import datetime, timedelta
+from django.utils import timezone
 
 
 policy = PasswordPolicy.from_names(
@@ -20,7 +23,7 @@ policy = PasswordPolicy.from_names(
 from django.contrib.auth.hashers import make_password
 
 @csrf_exempt
-def Cadastro(request):
+def Register(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -29,11 +32,9 @@ def Cadastro(request):
             password_hash = data.get('password_hash')
             role = data.get('role', 'user')
 
-            # Validações
             if not nome or not email or not password_hash:
                 return JsonResponse({'error': 'Campos obrigatórios não preenchidos.'}, status=400)
 
-            # Validação de senha
             errors = policy.test(password_hash)
             if errors:
                 return JsonResponse({'error': 'Senha inválida. Certifique-se de que atende aos requisitos de segurança.'}, status=400)
@@ -42,7 +43,6 @@ def Cadastro(request):
                 return JsonResponse({'error': 'Email já está em uso.'}, status=400)
 
             hashed_password = make_password(password_hash)
-
 
             user = User.objects.create(
                 nome=nome,
@@ -84,12 +84,9 @@ def Login(request):
 def GetUserById(request, user_id):
     if request.method == "GET":
         try:
-            # Buscar o usuário pelo ID
             user = User.objects.filter(id=user_id).first()
             if not user:
                 return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
-
-            # Retornar os dados do usuário
             user_data = {
                 'id': user.id,
                 'nome': user.nome,
@@ -129,19 +126,89 @@ def ReturnAllUsers(request):
 
 @csrf_exempt
 def DeleteUserById(request, user_id):
-    if request.method == "DELETE":  # Alterado para usar o método HTTP DELETE
+    if request.method == "DELETE": 
         try:
-            # Buscar o usuário pelo ID
             user = User.objects.filter(id=user_id).first()
             if not user:
                 return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
-
-            # Deletar o usuário
             user.delete()
-
             return JsonResponse({'message': 'Usuário deletado com sucesso.'}, status=200)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
-  
+
+@csrf_exempt
+def ResetPassword(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            email = data.get("email")
+            user = User.objects.filter(email=email).first()
+            if not user:
+                return JsonResponse({'error': 'E-mail inexistente.'}, status=404)
+            reset_token = str(uuid.uuid4())
+            reset_token_expires = datetime.now() + timedelta(hours=1)  
+            user.reset_token = reset_token
+            user.reset_token_expires = reset_token_expires
+            user.save()
+            return JsonResponse({
+                'message': 'Token de redefinição de senha gerado com sucesso.',
+                'reset_token': reset_token
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+@csrf_exempt
+def SetNewPassword(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            reset_token = data.get("reset_token")
+            new_password = data.get("new_password")
+
+            if not reset_token or not new_password:
+                return JsonResponse({'error': 'Token e nova senha são obrigatórios.'}, status=400)
+
+            user = User.objects.filter(reset_token=reset_token).first()
+            if not user:
+                return JsonResponse({'error': 'Token inválido.'}, status=404)
+
+            if user.reset_token_expires < timezone.now():
+                return JsonResponse({'error': 'Token expirado.'}, status=400)
+
+            errors = policy.test(new_password)
+            if errors:
+                return JsonResponse({'error': 'Senha inválida. Certifique-se de que atende aos requisitos de segurança.'}, status=400)
+
+            user.password_hash = make_password(new_password)  
+            user.reset_token = None  
+            user.reset_token_expires = None 
+            user.save()
+
+            return JsonResponse({'message': 'Senha redefinida com sucesso.'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+@csrf_exempt
+def EditUser(request, user_id):
+  if request.method == "PUT":
+     data = json.loads(request.body)
+     user = User.objects.filter(id=user_id).first()
+     user.nome = data.get("nome") or user.nome
+     user.email = data.get("email") or user.email
+     user.role = data.get("role") or user.role
+     user.save()
+     users_data = [{
+       'id': user.id,
+       'nome': user.nome,
+       'email': user.email,
+       'role': user.role,
+       'created_at': user.created_at,
+       'updated_at': user.updated_at
+      }]
+     return JsonResponse({"Success": users_data})
