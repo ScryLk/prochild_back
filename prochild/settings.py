@@ -48,7 +48,8 @@ THIRD_PARTY_APPS = [
 
 MY_APPS = [
     'users',
-    'sections'
+    'sections',
+    'categories'
 ]
 
 
