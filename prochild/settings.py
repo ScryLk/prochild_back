@@ -41,6 +41,7 @@ DJANGO_APPS = [
 ]
 
 
+LOGIN_URL = 'Login'
 
 THIRD_PARTY_APPS = [
     

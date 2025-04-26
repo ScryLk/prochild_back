@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Section
 import json
+from django.contrib.auth.decorators import login_required
 
 
 @csrf_exempt
@@ -19,6 +20,7 @@ def AddSections(request):
         return JsonResponse({"Success": "Seção cadastrada com sucesso"}, status=201)
     except:
       return JsonResponse({"Error": "Metodo não permitido"}, status=405)
+
 
 @csrf_exempt
 def ReturnAllSections(request):
