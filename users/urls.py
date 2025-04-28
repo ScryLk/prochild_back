@@ -9,5 +9,6 @@ urlpatterns = [
     path('delete/<int:user_id>/', views.DeleteUserById, name="DeleteUserById"), 
     path('reset-password/', views.ResetPassword, name="ResetPassword"), 
     path('set-new-password/', views.SetNewPassword, name="SetNewPassword"),  
-    path("edit/<int:user_id>", views.EditUser, name="EditUser")
+    path("edit/<int:user_id>", views.EditUser, name="EditUser"),
+    path('protected/', views.ProtectedView, name='protected'),
 ]

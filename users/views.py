@@ -10,6 +10,7 @@ from django.contrib.auth.hashers import check_password
 import uuid
 from datetime import datetime, timedelta
 from django.utils import timezone
+from .decorators import custom_login_required, admin_required
 
 
 policy = PasswordPolicy.from_names(
@@ -212,3 +213,26 @@ def EditUser(request, user_id):
        'updated_at': user.updated_at
       }]
      return JsonResponse({"Success": users_data})
+
+
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+
+@admin_required
+def ProtectedView(request):
+    try:
+        user_id = request.session.get('user_id')
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+        user_data = {
+            'id': user.id,
+            'nome': user.nome,
+            'email': user.email,
+            'role': user.role,
+            'created_at': user.created_at,
+            'updated_at': user.updated_at
+        }
+        return JsonResponse({'message': 'Acesso autorizado!', 'user': user_data}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
