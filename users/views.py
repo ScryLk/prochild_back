@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime, timedelta
 from django.utils import timezone
 from .decorators import custom_login_required, admin_required
-
+from django.contrib.auth.hashers import make_password
 
 policy = PasswordPolicy.from_names(
     length=8,  # Mínimo de 8 caracteres
@@ -21,9 +21,8 @@ policy = PasswordPolicy.from_names(
     nonletters=0,  # Pelo menos 0 caracteres não alfabéticos
 )
 
-from django.contrib.auth.hashers import make_password
-
 @csrf_exempt
+@admin_required
 def Register(request):
     if request.method == "POST":
         try:
@@ -82,6 +81,7 @@ def Login(request):
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
       
 @csrf_exempt
+@admin_required
 def GetUserById(request, user_id):
     if request.method == "GET":
         try:
@@ -103,6 +103,7 @@ def GetUserById(request, user_id):
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
       
 @csrf_exempt
+@admin_required
 def ReturnAllUsers(request):
     if request.method == "GET":
         try:
@@ -124,8 +125,8 @@ def ReturnAllUsers(request):
     else:
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
 
-
 @csrf_exempt
+@admin_required
 def DeleteUserById(request, user_id):
     if request.method == "DELETE": 
         try:
@@ -196,6 +197,7 @@ def SetNewPassword(request):
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
 
 @csrf_exempt
+@admin_required
 def EditUser(request, user_id):
   if request.method == "PUT":
      data = json.loads(request.body)
@@ -213,26 +215,3 @@ def EditUser(request, user_id):
        'updated_at': user.updated_at
       }]
      return JsonResponse({"Success": users_data})
-
-
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-
-@admin_required
-def ProtectedView(request):
-    try:
-        user_id = request.session.get('user_id')
-        user = User.objects.filter(id=user_id).first()
-        if not user:
-            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
-        user_data = {
-            'id': user.id,
-            'nome': user.nome,
-            'email': user.email,
-            'role': user.role,
-            'created_at': user.created_at,
-            'updated_at': user.updated_at
-        }
-        return JsonResponse({'message': 'Acesso autorizado!', 'user': user_data}, status=200)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
