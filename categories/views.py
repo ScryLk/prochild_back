@@ -3,8 +3,10 @@ from sections.models import Section
 from .models import Categories
 import json
 from django.views.decorators.csrf import csrf_exempt
+from users.decorators import admin_required  # Importa o decorador de admin
 
 
+@csrf_exempt
 def GetAllCategories(request):
     if request.method == "GET":
         try:
@@ -21,9 +23,10 @@ def GetAllCategories(request):
             return JsonResponse({"success": categories_data})
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-          
-          
+
+
 @csrf_exempt
+@admin_required
 def AddCategories(request):
     if request.method == "POST":
         try:
@@ -53,6 +56,7 @@ def AddCategories(request):
 
 
 @csrf_exempt
+@admin_required
 def DeleteCategories(request, categories_id):
     if request.method == "DELETE":
         try:
@@ -65,8 +69,10 @@ def DeleteCategories(request, categories_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
-      
+
+
 @csrf_exempt
+@admin_required
 def EditCategories(request, categories_id):
     if request.method == "PUT":
         try:
@@ -92,4 +98,3 @@ def EditCategories(request, categories_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
-      

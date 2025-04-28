@@ -4,8 +4,10 @@ import json
 from .models import Training
 from categories.models import Categories
 from django.views.decorators.csrf import csrf_exempt
+from users.decorators import admin_required  # Importa o decorador de admin
 
 @csrf_exempt
+@admin_required
 def AddTrainings(request):
     if request.method == "POST":
         try:
@@ -44,40 +46,44 @@ def AddTrainings(request):
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
 def ReturnAllTrainings(request):
-  if request.method == "GET":
-    try:
-      trainings = Training.objects.all()
-      training_data = [
-            {
-          'id': training.id,
-          'titulo': training.titulo, 
-          'tamanho': training.tamanho,
-          'descricao': training.descricao,
-          'arquivo_nome': training.arquivo_nome,
-          'arquivo_caminho': training.arquivo_caminho,
-          'created_at': training.created_at,
-          'updated_at': training.updated_at,
-          'categoria_id': training.categoria_id      
-            }
-        for training in trainings 
-              ]
-      return JsonResponse({"Success": training_data})
-    except:
-      return JsonResponse({"Error": "Método não permitido"})
+    if request.method == "GET":
+        try:
+            trainings = Training.objects.all()
+            training_data = [
+                {
+                    'id': training.id,
+                    'titulo': training.titulo, 
+                    'tamanho': training.tamanho,
+                    'descricao': training.descricao,
+                    'arquivo_nome': training.arquivo_nome,
+                    'arquivo_caminho': training.arquivo_caminho,
+                    'created_at': training.created_at,
+                    'updated_at': training.updated_at,
+                    'categoria_id': training.categoria_id      
+                }
+                for training in trainings 
+            ]
+            return JsonResponse({"Success": training_data})
+        except Exception as e:
+            return JsonResponse({"Error": str(e)}, status=500)
 
 @csrf_exempt
+@admin_required
 def DeleteTraining(request, training_id):
-  if request.method == "DELETE":
-    try:
-      training = Training.objects.filter(id=training_id)
-      if not training:
-        return JsonResponse({"error": "treinamento não encontrado"})
-      training.delete()
-      return JsonResponse({"success": "Treinamento deletado com sucesso"})
-    except:
-      return JsonResponse({"error": "Método não permitido"})
+    if request.method == "DELETE":
+        try:
+            training = Training.objects.filter(id=training_id).first()
+            if not training:
+                return JsonResponse({"error": "Treinamento não encontrado"}, status=404)
+            training.delete()
+            return JsonResponse({"success": "Treinamento deletado com sucesso"}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
+@admin_required
 def EditTraining(request, training_id):
     if request.method == "PUT":
         try:
@@ -118,35 +124,32 @@ def EditTraining(request, training_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
-      
 
 def GetTrainingById(request, training_id):
-  if request.method == "GET":
-    try:
-      training = Training.objects.get(id = training_id)
-      if not training:
-        return JsonResponse({"error": "treinamento não encontrado"})
-      training_data = [
-        {
-          "id": training.id,
-          "titulo": training.titulo,
-          "descricao": training.descricao,
-          "arquivo_nome": training.arquivo_nome,
-          "arquivo_caminho": training.arquivo_caminho,
-          "tamanho": training.tamanho,
-          "categoria_id": training.categoria.id,
-          "created_at": training.created_at,
-          "updated_at": training.updated_at,
-        }
-      ]
-      return JsonResponse({"success": training_data})
-    except Exception as e:
+    if request.method == "GET":
+        try:
+            training = Training.objects.get(id=training_id)
+            training_data = {
+                "id": training.id,
+                "titulo": training.titulo,
+                "descricao": training.descricao,
+                "arquivo_nome": training.arquivo_nome,
+                "arquivo_caminho": training.arquivo_caminho,
+                "tamanho": training.tamanho,
+                "categoria_id": training.categoria.id,
+                "created_at": training.created_at,
+                "updated_at": training.updated_at,
+            }
+            return JsonResponse({"success": training_data}, status=200)
+        except Training.DoesNotExist:
+            return JsonResponse({"error": "Treinamento não encontrado"}, status=404)
+        except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
-      return JsonResponse({"error": "método não permitido"})
-    
+        return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
+@admin_required
 def DeleteAllTrainings(request, categorie_id):
     if request.method == "DELETE":
         try:
@@ -160,30 +163,30 @@ def DeleteAllTrainings(request, categorie_id):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
-      
+
 def GetTrainingByCategories(request, categorie_id):
-  if request.method == "GET":
-    try:
-       categorie = Categories.objects.get(id=categorie_id)
-       trainings = Training.objects.filter(categoria=categorie)
-       trainings_data = [
-         {
-           'id': training.id, 
-           'titulo': training.titulo, 
-           'descricao': training.descricao,
-           'arquivo_nome': training.arquivo_nome, 
-           'arquivo_caminho': training.arquivo_caminho, 
-           'tamanho': training.tamanho,
-           'categoria_id': training.categoria_id,
-           'created_at': training.created_at,
-           'updated_at': training.updated_at
-         }
-         for training in trainings
-         ]
-       return JsonResponse({"success": trainings_data})
-    except Exception as e:
+    if request.method == "GET":
+        try:
+            categorie = Categories.objects.get(id=categorie_id)
+            trainings = Training.objects.filter(categoria=categorie)
+            trainings_data = [
+                {
+                    'id': training.id, 
+                    'titulo': training.titulo, 
+                    'descricao': training.descricao,
+                    'arquivo_nome': training.arquivo_nome, 
+                    'arquivo_caminho': training.arquivo_caminho, 
+                    'tamanho': training.tamanho,
+                    'categoria_id': training.categoria_id,
+                    'created_at': training.created_at,
+                    'updated_at': training.updated_at
+                }
+                for training in trainings
+            ]
+            return JsonResponse({"success": trainings_data}, status=200)
+        except Categories.DoesNotExist:
+            return JsonResponse({"error": "Categoria não encontrada"}, status=404)
+        except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
-  
-
