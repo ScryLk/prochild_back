@@ -2,11 +2,12 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import Section
+from categories.models import Categories
+from trainings.models import Training
 import json
 from users.decorators import admin_required 
 
 @csrf_exempt
-@admin_required
 def AddSections(request):
     if request.method == "POST":
         try:
@@ -31,6 +32,8 @@ def ReturnAllSections(request):
                 {
                     'id': section.id,
                     'nome': section.nome,
+                    'quantidade_categorias': Categories.objects.filter(secao=section).count(),
+                    'quantidade_treinamentos': Training.objects.filter(secao=section).count(),
                     'created_at': section.created_at,
                     'updated_at': section.updated_at
                 }
@@ -43,7 +46,6 @@ def ReturnAllSections(request):
         return JsonResponse({"Error": "Método não permitido"}, status=405)
 
 @csrf_exempt
-@admin_required
 def DeleteSections(request, sections_id):
     if request.method == "DELETE":
         try:
@@ -71,6 +73,8 @@ def EditSections(request, sections_id):
             section_data = {
                 'id': section.id,
                 'nome': section.nome,
+                'quantidade_categorias': Categories.objects.filter(secao=section).count(),
+                'quantidade_treinamentos': Training.objects.filter(secao=section).count(),
                 'created_at': section.created_at,
                 'updated_at': section.updated_at
             }
@@ -80,23 +84,22 @@ def EditSections(request, sections_id):
     else:
         return JsonResponse({"Error": "Método não permitido"}, status=405)
 
-@admin_required
 def GetSectionsById(request, sections_id):
-  if request.method == "GET":
-    try:
-      section = Section.objects.filter(id=sections_id)
-      if not section:
-        return JsonResponse({"error": "Section não encontrada"}, status=404)
-      section_data = [
-        {
-          "id": section.id, 
-          "nome": section.nome, 
-          "created_at": section.created_at, 
-          "updated_at": section.updated_at
-        }
-      ]
-      return JsonResponse({"success": section_data})
-    except Exception as e:
+    if request.method == "GET":
+        try:
+            section = Section.objects.filter(id=sections_id).first()
+            if not section:
+                return JsonResponse({"error": "Seção não encontrada"}, status=404)
+            section_data = {
+                "id": section.id,
+                "nome": section.nome,
+                "quantidade_categorias": Categories.objects.filter(secao=section).count(),
+                "quantidade_treinamentos": Training.objects.filter(secao=section).count(),
+                "created_at": section.created_at,
+                "updated_at": section.updated_at
+            }
+            return JsonResponse({"success": section_data}, status=200)
+        except Exception as e:
             return JsonResponse({"Error": str(e)}, status=500)
     else:
         return JsonResponse({"Error": "Método não permitido"}, status=405)

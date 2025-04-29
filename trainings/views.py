@@ -3,6 +3,7 @@ from django.http import JsonResponse
 import json
 from .models import Training
 from categories.models import Categories
+from sections.models import Section
 from django.views.decorators.csrf import csrf_exempt
 from users.decorators import admin_required  # Importa o decorador de admin
 
@@ -18,23 +19,33 @@ def AddTrainings(request):
             arquivo_caminho = data.get("arquivo_caminho")
             tamanho = data.get("tamanho")
             categoria_id = data.get("categoria_id")
+
+            # Validações
             if not titulo:
                 return JsonResponse({"error": "Titulo Obrigatório"}, status=400)
             if not descricao:
                 return JsonResponse({"error": "Descrição Obrigatória"}, status=400)
             if not categoria_id:
                 return JsonResponse({"error": "Categoria Obrigatória"}, status=400)
+
+            # Obtém a categoria e a seção associada
             try:
                 categoria = Categories.objects.get(id=categoria_id)
+                secao = categoria.secao  # Obtém a seção associada à categoria
+                if not secao:
+                    return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
             except Categories.DoesNotExist:
                 return JsonResponse({"error": "Categoria não encontrada"}, status=404)
+
+            # Cria o treinamento
             training = Training.objects.create(
                 titulo=titulo,
                 descricao=descricao,
                 arquivo_nome=arquivo_nome,
                 arquivo_caminho=arquivo_caminho,
                 tamanho=tamanho,
-                categoria=categoria
+                categoria=categoria,
+                secao=secao  # Define a seção automaticamente
             )
             return JsonResponse({"success": "Treinamento cadastrado com sucesso", "training_id": training.id}, status=201)
 
@@ -59,13 +70,14 @@ def ReturnAllTrainings(request):
                     'arquivo_caminho': training.arquivo_caminho,
                     'created_at': training.created_at,
                     'updated_at': training.updated_at,
-                    'categoria_id': training.categoria_id      
+                    'categoria_id': training.categoria_id,
+                    'secao_id': training.secao.id  # Inclui a seção no retorno
                 }
                 for training in trainings 
             ]
-            return JsonResponse({"Success": training_data})
+            return JsonResponse({"success": training_data}, status=200)
         except Exception as e:
-            return JsonResponse({"Error": str(e)}, status=500)
+            return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
 @admin_required
@@ -92,18 +104,27 @@ def EditTraining(request, training_id):
                 training = Training.objects.get(id=training_id) 
             except Training.DoesNotExist:
                 return JsonResponse({"error": "Treinamento não encontrado"}, status=404)
+
+            # Atualiza os campos do treinamento
             training.titulo = data.get("titulo", training.titulo)
             training.descricao = data.get("descricao", training.descricao)
             training.arquivo_nome = data.get("arquivo_nome", training.arquivo_nome)
             training.arquivo_caminho = data.get("arquivo_caminho", training.arquivo_caminho)
             training.tamanho = data.get("tamanho", training.tamanho)
+
+            # Atualiza a categoria e a seção associada
             categoria_id = data.get("categoria_id")
             if categoria_id:
                 try:
                     categoria = Categories.objects.get(id=categoria_id)
+                    secao = categoria.secao
+                    if not secao:
+                        return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
                     training.categoria = categoria
+                    training.secao = secao  # Atualiza a seção automaticamente
                 except Categories.DoesNotExist:
                     return JsonResponse({"error": "Categoria não encontrada"}, status=404)
+
             training.save()
             training_data = {
                 "id": training.id,
@@ -113,6 +134,7 @@ def EditTraining(request, training_id):
                 "arquivo_caminho": training.arquivo_caminho,
                 "tamanho": training.tamanho,
                 "categoria_id": training.categoria.id,
+                "secao_id": training.secao.id,  # Inclui a seção no retorno
                 "created_at": training.created_at,
                 "updated_at": training.updated_at,
             }
@@ -137,6 +159,7 @@ def GetTrainingById(request, training_id):
                 "arquivo_caminho": training.arquivo_caminho,
                 "tamanho": training.tamanho,
                 "categoria_id": training.categoria.id,
+                "secao_id": training.secao.id,  # Inclui a seção no retorno
                 "created_at": training.created_at,
                 "updated_at": training.updated_at,
             }
@@ -178,6 +201,7 @@ def GetTrainingByCategories(request, categorie_id):
                     'arquivo_caminho': training.arquivo_caminho, 
                     'tamanho': training.tamanho,
                     'categoria_id': training.categoria_id,
+                    'secao_id': training.secao.id,  # Inclui a seção no retorno
                     'created_at': training.created_at,
                     'updated_at': training.updated_at
                 }

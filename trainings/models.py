@@ -1,6 +1,7 @@
 from django.db import models
 from categories.models import Categories
 from django.utils.timezone import now
+from sections.models import Section
 
 
 class Training(models.Model):
@@ -8,6 +9,13 @@ class Training(models.Model):
     categoria = models.ForeignKey(Categories, on_delete=models.CASCADE, related_name='trainings')
     titulo = models.CharField(max_length=150, null=False)
     descricao = models.TextField(blank=True, null=True)
+    secao = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="trainings",
+        null=True,  # Permite valores nulos temporariamente
+        blank=True  # Permite que o campo seja opcional no formulário
+    )
     arquivo_nome = models.CharField(max_length=255, blank=True, null=True)
     arquivo_caminho = models.CharField(max_length=255, blank=True, null=True)
     tamanho = models.CharField(max_length=10, blank=True, null=True)
