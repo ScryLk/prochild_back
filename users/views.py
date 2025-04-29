@@ -22,7 +22,6 @@ policy = PasswordPolicy.from_names(
 )
 
 @csrf_exempt
-@admin_required
 def Register(request):
     if request.method == "POST":
         try:
@@ -80,8 +79,7 @@ def Login(request):
     else:
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
       
-@csrf_exempt
-@admin_required
+
 def GetUserById(request, user_id):
     if request.method == "GET":
         try:
@@ -103,7 +101,6 @@ def GetUserById(request, user_id):
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
       
 @csrf_exempt
-@admin_required
 def ReturnAllUsers(request):
     if request.method == "GET":
         try:
@@ -126,7 +123,6 @@ def ReturnAllUsers(request):
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
 
 @csrf_exempt
-@admin_required
 def DeleteUserById(request, user_id):
     if request.method == "DELETE": 
         try:
@@ -197,7 +193,6 @@ def SetNewPassword(request):
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
 
 @csrf_exempt
-@admin_required
 def EditUser(request, user_id):
   if request.method == "PUT":
      data = json.loads(request.body)

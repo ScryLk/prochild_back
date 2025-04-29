@@ -44,7 +44,7 @@ DJANGO_APPS = [
 LOGIN_URL = 'Login'
 
 THIRD_PARTY_APPS = [
-    
+    'corsheaders'
 ]
 
 MY_APPS = [
@@ -57,16 +57,42 @@ MY_APPS = [
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + MY_APPS
 
+CORS_ALLOWED_ORIGINS = [
+    "http://10.252.0.17:5173",
+    "http://localhost:5173"
+]
+
+CORS_ALLOW_CREDENTIALS = True 
+
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+    "accept",
+    "origin",
+]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Deve ser o primeiro middleware
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
 
 ROOT_URLCONF = 'prochild.urls'
 
