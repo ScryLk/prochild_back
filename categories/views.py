@@ -15,6 +15,7 @@ def GetAllCategories(request):
                     'id': categorie.id,
                     'nome': categorie.nome,
                     'icone_id': categorie.icone_id,
+                    'secao_nome': categorie.secao.nome if categorie.secao else None,  # Adiciona o nome da seção
                     'created_at': categorie.created_at,
                     'updated_at': categorie.updated_at
                 }
@@ -26,7 +27,6 @@ def GetAllCategories(request):
 
 
 @csrf_exempt
-@admin_required
 def AddCategories(request):
     if request.method == "POST":
         try:
@@ -56,7 +56,6 @@ def AddCategories(request):
 
 
 @csrf_exempt
-@admin_required
 def DeleteCategories(request, categories_id):
     if request.method == "DELETE":
         try:
@@ -72,7 +71,6 @@ def DeleteCategories(request, categories_id):
 
 
 @csrf_exempt
-@admin_required
 def EditCategories(request, categories_id):
     if request.method == "PUT":
         try:

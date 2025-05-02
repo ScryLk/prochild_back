@@ -60,7 +60,6 @@ def DeleteSections(request, sections_id):
         return JsonResponse({"Error": "Método não permitido"}, status=405)
 
 @csrf_exempt
-@admin_required
 def EditSections(request, sections_id):
     if request.method == "PUT":
         try:

@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 from users.decorators import admin_required  # Importa o decorador de admin
 
 @csrf_exempt
-@admin_required
 def AddTrainings(request):
     if request.method == "POST":
         try:
@@ -68,10 +67,33 @@ def ReturnAllTrainings(request):
                     'descricao': training.descricao,
                     'arquivo_nome': training.arquivo_nome,
                     'arquivo_caminho': training.arquivo_caminho,
+                    'categoria_id': training.categoria_id,
+                    'categoria_nome': training.categoria.nome,  # Inclui o nome da categoria
+                    'secao_id': training.secao.id,
+                    'secao_nome': training.secao.nome,  # Inclui o nome da seção
+                    'created_at': training.created_at,
+                    'updated_at': training.updated_at
+                }
+                for training in trainings 
+            ]
+            return JsonResponse({"success": training_data}, status=200)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    if request.method == "GET":
+        try:
+            trainings = Training.objects.all()
+            training_data = [
+                {
+                    'id': training.id,
+                    'titulo': training.titulo, 
+                    'tamanho': training.tamanho,
+                    'descricao': training.descricao,
+                    'arquivo_nome': training.arquivo_nome,
+                    'arquivo_caminho': training.arquivo_caminho,
                     'created_at': training.created_at,
                     'updated_at': training.updated_at,
                     'categoria_id': training.categoria_id,
-                    'secao_id': training.secao.id  # Inclui a seção no retorno
+                    'secao_id': training.secao.id  
                 }
                 for training in trainings 
             ]
@@ -95,7 +117,6 @@ def DeleteTraining(request, training_id):
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
-@admin_required
 def EditTraining(request, training_id):
     if request.method == "PUT":
         try:
@@ -172,7 +193,6 @@ def GetTrainingById(request, training_id):
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
-@admin_required
 def DeleteAllTrainings(request, categorie_id):
     if request.method == "DELETE":
         try:
