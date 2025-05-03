@@ -102,7 +102,6 @@ def ReturnAllTrainings(request):
             return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt
-@admin_required
 def DeleteTraining(request, training_id):
     if request.method == "DELETE":
         try:
