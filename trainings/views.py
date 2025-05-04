@@ -297,24 +297,34 @@ def DeleteAllTrainings(request, categorie_id):
 def GetTrainingByCategories(request, categorie_id):
     if request.method == "GET":
         try:
+            # Obtém a categoria pelo ID
             categorie = Categories.objects.get(id=categorie_id)
+            
+            # Filtra os treinamentos pela categoria
             trainings = Training.objects.filter(categoria=categorie)
+            
+            # Prepara os dados dos treinamentos
             trainings_data = [
                 {
                     'id': training.id, 
                     'titulo': training.titulo, 
                     'descricao': training.descricao,
                     'arquivo_nome': training.arquivo_nome, 
-                    'arquivo_caminho': training.arquivo_caminho, 
+                    'arquivo_caminho': request.build_absolute_uri(training.arquivo_caminho.url) if training.arquivo_caminho else None,  # Retorna a URL absoluta
                     'tamanho': training.tamanho,
-                    'categoria_id': training.categoria_id,
-                    'secao_id': training.secao.id,  # Inclui a seção no retorno
+                    'categoria_id': training.categoria.id if training.categoria else None,
+                    'categoria_nome': training.categoria.nome if training.categoria else None,  # Inclui o nome da categoria
+                    'secao_id': training.secao.id if training.secao else None,
+                    'secao_nome': training.secao.nome if training.secao else None,  # Inclui o nome da seção
                     'created_at': training.created_at,
                     'updated_at': training.updated_at
                 }
                 for training in trainings
             ]
+            
+            # Retorna os dados dos treinamentos
             return JsonResponse({"success": trainings_data}, status=200)
+        
         except Categories.DoesNotExist:
             return JsonResponse({"error": "Categoria não encontrada"}, status=404)
         except Exception as e:
