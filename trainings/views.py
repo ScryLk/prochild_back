@@ -159,8 +159,7 @@ def ReturnAllTrainings(request):
                     'tamanho': training.tamanho,
                     'descricao': training.descricao,
                     'arquivo_nome': training.arquivo_nome,
-                    'arquivo_caminho': training.arquivo_caminho.url if training.arquivo_caminho else None,  # Converte para URL
-                    'categoria_id': training.categoria.id if training.categoria else None,
+                    'arquivo_caminho': request.build_absolute_uri(training.arquivo_caminho.url) if training.arquivo_caminho else None,  # Retorna a URL absoluta                    'categoria_id': training.categoria.id if training.categoria else None,
                     'categoria_nome': training.categoria.nome if training.categoria else None,
                     'secao_id': training.secao.id if training.secao else None,
                     'secao_nome': training.secao.nome if training.secao else None,
