@@ -187,22 +187,21 @@ def DeleteTraining(request, training_id):
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
 @csrf_exempt
-@csrf_exempt
 def EditTraining(request, training_id):
     if request.method == "PUT":
         try:
-            # Obtém os dados enviados na requisição
-            titulo = request.POST.get("titulo")
-            descricao = request.POST.get("descricao")
-            categoria_id = request.POST.get("categoria_id")
-            arquivo = request.FILES.get("arquivo_caminho")  # Obtém o arquivo enviado
-            tamanho = request.POST.get("tamanho")
-
-            # Verifica se o treinamento existe
+            # Obtém o treinamento pelo ID
             try:
                 training = Training.objects.get(id=training_id)
             except Training.DoesNotExist:
                 return JsonResponse({"error": "Treinamento não encontrado"}, status=404)
+
+            # Processa os dados enviados no corpo da requisição
+            data = json.loads(request.body.decode("utf-8"))  # Decodifica o JSON enviado
+            titulo = data.get("titulo")
+            descricao = data.get("descricao")
+            categoria_id = data.get("categoria_id")
+            tamanho = data.get("tamanho")
 
             # Atualiza os campos do treinamento
             if titulo:
@@ -225,6 +224,7 @@ def EditTraining(request, training_id):
                     return JsonResponse({"error": "Categoria não encontrada"}, status=404)
 
             # Atualiza o arquivo, se enviado
+            arquivo = request.FILES.get("arquivo_caminho")  # Obtém o arquivo enviado
             if arquivo:
                 # Verifica o tipo de arquivo
                 if arquivo.content_type not in ["application/pdf", "image/png", "video/mp4"]:
@@ -250,55 +250,6 @@ def EditTraining(request, training_id):
             }
             return JsonResponse({"success": "Treinamento atualizado com sucesso", "training": training_data}, status=200)
 
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Método não permitido"}, status=405)
-    if request.method == "PUT":
-        try:
-            data = json.loads(request.body)  
-            try:
-                training = Training.objects.get(id=training_id) 
-            except Training.DoesNotExist:
-                return JsonResponse({"error": "Treinamento não encontrado"}, status=404)
-
-            # Atualiza os campos do treinamento
-            training.titulo = data.get("titulo", training.titulo)
-            training.descricao = data.get("descricao", training.descricao)
-            training.arquivo_nome = data.get("arquivo_nome", training.arquivo_nome)
-            training.arquivo_caminho = data.get("arquivo_caminho", training.arquivo_caminho)
-            training.tamanho = data.get("tamanho", training.tamanho)
-
-            # Atualiza a categoria e a seção associada
-            categoria_id = data.get("categoria_id")
-            if categoria_id:
-                try:
-                    categoria = Categories.objects.get(id=categoria_id)
-                    secao = categoria.secao
-                    if not secao:
-                        return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
-                    training.categoria = categoria
-                    training.secao = secao  # Atualiza a seção automaticamente
-                except Categories.DoesNotExist:
-                    return JsonResponse({"error": "Categoria não encontrada"}, status=404)
-
-            training.save()
-            training_data = {
-                "id": training.id,
-                "titulo": training.titulo,
-                "descricao": training.descricao,
-                "arquivo_nome": training.arquivo_nome,
-                "arquivo_caminho": training.arquivo_caminho,
-                "tamanho": training.tamanho,
-                "categoria_id": training.categoria.id,
-                "secao_id": training.secao.id,  # Inclui a seção no retorno
-                "created_at": training.created_at,
-                "updated_at": training.updated_at,
-            }
-            return JsonResponse({"success": "Treinamento atualizado com sucesso", "training": training_data}, status=200)
-
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Dados inválidos no corpo da requisição"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     else:
