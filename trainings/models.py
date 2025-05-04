@@ -17,7 +17,7 @@ class Training(models.Model):
         blank=True  # Permite que o campo seja opcional no formulário
     )
     arquivo_nome = models.CharField(max_length=255, blank=True, null=True)
-    arquivo_caminho = models.CharField(max_length=255, blank=True, null=True)
+    arquivo_caminho = models.FileField(upload_to='trainings/files/', blank=True, null=True)  # Diretório para armazenar arquivos
     tamanho = models.CharField(max_length=10, blank=True, null=True)
     created_at = models.DateTimeField(default=now)
     updated_at = models.DateTimeField(auto_now=True)

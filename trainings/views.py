@@ -11,6 +11,99 @@ from users.decorators import admin_required  # Importa o decorador de admin
 def AddTrainings(request):
     if request.method == "POST":
         try:
+            # Certifique-se de usar request.FILES para lidar com arquivos
+            titulo = request.POST.get("titulo")
+            descricao = request.POST.get("descricao")
+            categoria_id = request.POST.get("categoria_id")
+            arquivo = request.FILES.get("arquivo_caminho")  # Obtém o arquivo enviado
+
+            # Validações
+            if not titulo:
+                return JsonResponse({"error": "Titulo Obrigatório"}, status=400)
+            if not descricao:
+                return JsonResponse({"error": "Descrição Obrigatória"}, status=400)
+            if not categoria_id:
+                return JsonResponse({"error": "Categoria Obrigatória"}, status=400)
+            if not arquivo:
+                return JsonResponse({"error": "Arquivo Obrigatório"}, status=400)
+
+            # Verifica o tipo de arquivo
+            if arquivo.content_type not in ["application/pdf", "image/png", "video/mp4"]:
+                return JsonResponse({"error": "Tipo de arquivo não suportado. Apenas PDF, PNG e MP4 são permitidos."}, status=400)
+
+            # Obtém a categoria e a seção associada
+            try:
+                categoria = Categories.objects.get(id=categoria_id)
+                secao = categoria.secao  # Obtém a seção associada à categoria
+                if not secao:
+                    return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
+            except Categories.DoesNotExist:
+                return JsonResponse({"error": "Categoria não encontrada"}, status=404)
+
+            # Cria o treinamento
+            training = Training.objects.create(
+                titulo=titulo,
+                descricao=descricao,
+                categoria=categoria,
+                secao=secao,
+                arquivo_nome=arquivo.name,
+                arquivo_caminho=arquivo  # Salva o arquivo no campo FileField
+            )
+            return JsonResponse({"success": "Treinamento cadastrado com sucesso", "training_id": training.id}, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Método não permitido"}, status=405)
+    
+    if request.method == "POST":
+        try:
+            # Certifique-se de usar request.FILES para lidar com arquivos
+            titulo = request.POST.get("titulo")
+            descricao = request.POST.get("descricao")
+            categoria_id = request.POST.get("categoria_id")
+            arquivo = request.FILES.get("arquivo")  # Obtém o arquivo enviado
+
+            # Validações
+            if not titulo:
+                return JsonResponse({"error": "Titulo Obrigatório"}, status=400)
+            if not descricao:
+                return JsonResponse({"error": "Descrição Obrigatória"}, status=400)
+            if not categoria_id:
+                return JsonResponse({"error": "Categoria Obrigatória"}, status=400)
+            if not arquivo:
+                return JsonResponse({"error": "Arquivo Obrigatório"}, status=400)
+
+            # Verifica o tipo de arquivo
+            if arquivo.content_type not in ["application/pdf", "image/png", "video/mp4"]:
+                return JsonResponse({"error": "Tipo de arquivo não suportado. Apenas PDF, PNG e MP4 são permitidos."}, status=400)
+
+            # Obtém a categoria e a seção associada
+            try:
+                categoria = Categories.objects.get(id=categoria_id)
+                secao = categoria.secao  # Obtém a seção associada à categoria
+                if not secao:
+                    return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
+            except Categories.DoesNotExist:
+                return JsonResponse({"error": "Categoria não encontrada"}, status=404)
+
+            # Cria o treinamento
+            training = Training.objects.create(
+                titulo=titulo,
+                descricao=descricao,
+                categoria=categoria,
+                secao=secao,
+                arquivo_nome=arquivo.name,
+                arquivo_caminho=arquivo  # Salva o arquivo no campo FileField
+            )
+            return JsonResponse({"success": "Treinamento cadastrado com sucesso", "training_id": training.id}, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Método não permitido"}, status=405)
+    if request.method == "POST":
+        try:
             data = json.loads(request.body)  
             titulo = data.get("titulo")
             descricao = data.get("descricao")
@@ -66,11 +159,11 @@ def ReturnAllTrainings(request):
                     'tamanho': training.tamanho,
                     'descricao': training.descricao,
                     'arquivo_nome': training.arquivo_nome,
-                    'arquivo_caminho': training.arquivo_caminho,
-                    'categoria_id': training.categoria_id,
-                    'categoria_nome': training.categoria.nome,  # Inclui o nome da categoria
-                    'secao_id': training.secao.id,
-                    'secao_nome': training.secao.nome,  # Inclui o nome da seção
+                    'arquivo_caminho': training.arquivo_caminho.url if training.arquivo_caminho else None,  # Converte para URL
+                    'categoria_id': training.categoria.id if training.categoria else None,
+                    'categoria_nome': training.categoria.nome if training.categoria else None,
+                    'secao_id': training.secao.id if training.secao else None,
+                    'secao_nome': training.secao.nome if training.secao else None,
                     'created_at': training.created_at,
                     'updated_at': training.updated_at
                 }
@@ -79,28 +172,7 @@ def ReturnAllTrainings(request):
             return JsonResponse({"success": training_data}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-    if request.method == "GET":
-        try:
-            trainings = Training.objects.all()
-            training_data = [
-                {
-                    'id': training.id,
-                    'titulo': training.titulo, 
-                    'tamanho': training.tamanho,
-                    'descricao': training.descricao,
-                    'arquivo_nome': training.arquivo_nome,
-                    'arquivo_caminho': training.arquivo_caminho,
-                    'created_at': training.created_at,
-                    'updated_at': training.updated_at,
-                    'categoria_id': training.categoria_id,
-                    'secao_id': training.secao.id  
-                }
-                for training in trainings 
-            ]
-            return JsonResponse({"success": training_data}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-
+        
 @csrf_exempt
 def DeleteTraining(request, training_id):
     if request.method == "DELETE":
