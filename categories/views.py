@@ -96,3 +96,28 @@ def EditCategories(request, categories_id):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
+
+@csrf_exempt
+def GetCategorieBySection(request, section_id):
+    if request.method == "GET":
+        try:
+            section = Section.objects.get(id=section_id)
+            categories = Categories.objects.filter(secao=section)
+            categorie_data = [
+                {
+                    'id': categorie.id,
+                    'nome': categorie.nome,
+                    'created_at': categorie.created_at,
+                    'updated_at': categorie.updated_at,
+                    'secao_id': categorie.secao_id,
+                    'icone_id': categorie.icone_id,
+                }
+                for categorie in categories
+            ]
+            return JsonResponse({"success": categorie_data}, status=200)
+        except Section.DoesNotExist:
+            return JsonResponse({"error": "Seção não encontrada"}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Método não permitido"}, status=405)

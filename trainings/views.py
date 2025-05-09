@@ -58,13 +58,10 @@ def AddTrainings(request):
     
     if request.method == "POST":
         try:
-            # Certifique-se de usar request.FILES para lidar com arquivos
             titulo = request.POST.get("titulo")
             descricao = request.POST.get("descricao")
             categoria_id = request.POST.get("categoria_id")
-            arquivo = request.FILES.get("arquivo")  # Obtém o arquivo enviado
-
-            # Validações
+            arquivo = request.FILES.get("arquivo")  
             if not titulo:
                 return JsonResponse({"error": "Titulo Obrigatório"}, status=400)
             if not descricao:
@@ -73,28 +70,23 @@ def AddTrainings(request):
                 return JsonResponse({"error": "Categoria Obrigatória"}, status=400)
             if not arquivo:
                 return JsonResponse({"error": "Arquivo Obrigatório"}, status=400)
-
-            # Verifica o tipo de arquivo
             if arquivo.content_type not in ["application/pdf", "image/png", "video/mp4"]:
                 return JsonResponse({"error": "Tipo de arquivo não suportado. Apenas PDF, PNG e MP4 são permitidos."}, status=400)
-
-            # Obtém a categoria e a seção associada
             try:
                 categoria = Categories.objects.get(id=categoria_id)
-                secao = categoria.secao  # Obtém a seção associada à categoria
+                secao = categoria.secao  
                 if not secao:
                     return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
             except Categories.DoesNotExist:
                 return JsonResponse({"error": "Categoria não encontrada"}, status=404)
 
-            # Cria o treinamento
             training = Training.objects.create(
                 titulo=titulo,
                 descricao=descricao,
                 categoria=categoria,
                 secao=secao,
                 arquivo_nome=arquivo.name,
-                arquivo_caminho=arquivo  # Salva o arquivo no campo FileField
+                arquivo_caminho=arquivo  
             )
             return JsonResponse({"success": "Treinamento cadastrado com sucesso", "training_id": training.id}, status=201)
 
@@ -120,16 +112,13 @@ def AddTrainings(request):
             if not categoria_id:
                 return JsonResponse({"error": "Categoria Obrigatória"}, status=400)
 
-            # Obtém a categoria e a seção associada
             try:
                 categoria = Categories.objects.get(id=categoria_id)
-                secao = categoria.secao  # Obtém a seção associada à categoria
+                secao = categoria.secao 
                 if not secao:
                     return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
             except Categories.DoesNotExist:
                 return JsonResponse({"error": "Categoria não encontrada"}, status=404)
-
-            # Cria o treinamento
             training = Training.objects.create(
                 titulo=titulo,
                 descricao=descricao,
@@ -137,7 +126,7 @@ def AddTrainings(request):
                 arquivo_caminho=arquivo_caminho,
                 tamanho=tamanho,
                 categoria=categoria,
-                secao=secao  # Define a seção automaticamente
+                secao=secao 
             )
             return JsonResponse({"success": "Treinamento cadastrado com sucesso", "training_id": training.id}, status=201)
 
@@ -219,23 +208,17 @@ def EditTraining(request, training_id):
                     if not secao:
                         return JsonResponse({"error": "A seção associada à categoria não existe"}, status=404)
                     training.categoria = categoria
-                    training.secao = secao  # Atualiza a seção automaticamente
+                    training.secao = secao  
                 except Categories.DoesNotExist:
                     return JsonResponse({"error": "Categoria não encontrada"}, status=404)
-
-            # Atualiza o arquivo, se enviado
-            arquivo = request.FILES.get("arquivo_caminho")  # Obtém o arquivo enviado
+            arquivo = request.FILES.get("arquivo_caminho") 
             if arquivo:
-                # Verifica o tipo de arquivo
                 if arquivo.content_type not in ["application/pdf", "image/png", "video/mp4"]:
                     return JsonResponse({"error": "Tipo de arquivo não suportado. Apenas PDF, PNG e MP4 são permitidos."}, status=400)
                 training.arquivo_nome = arquivo.name
-                training.arquivo_caminho = arquivo  # Atualiza o arquivo no campo FileField
-
-            # Salva as alterações no treinamento
+                training.arquivo_caminho = arquivo  
             training.save()
 
-            # Retorna os dados atualizados do treinamento
             training_data = {
                 "id": training.id,
                 "titulo": training.titulo,
@@ -267,7 +250,7 @@ def GetTrainingById(request, training_id):
                 "arquivo_caminho": training.arquivo_caminho,
                 "tamanho": training.tamanho,
                 "categoria_id": training.categoria.id,
-                "secao_id": training.secao.id,  # Inclui a seção no retorno
+                "secao_id": training.secao.id,  
                 "created_at": training.created_at,
                 "updated_at": training.updated_at,
             }
@@ -310,19 +293,18 @@ def GetTrainingByCategories(request, categorie_id):
                     'titulo': training.titulo, 
                     'descricao': training.descricao,
                     'arquivo_nome': training.arquivo_nome, 
-                    'arquivo_caminho': request.build_absolute_uri(training.arquivo_caminho.url) if training.arquivo_caminho else None,  # Retorna a URL absoluta
+                    'arquivo_caminho': request.build_absolute_uri(training.arquivo_caminho.url) if training.arquivo_caminho else None,  
                     'tamanho': training.tamanho,
                     'categoria_id': training.categoria.id if training.categoria else None,
-                    'categoria_nome': training.categoria.nome if training.categoria else None,  # Inclui o nome da categoria
+                    'categoria_nome': training.categoria.nome if training.categoria else None, 
                     'secao_id': training.secao.id if training.secao else None,
-                    'secao_nome': training.secao.nome if training.secao else None,  # Inclui o nome da seção
+                    'secao_nome': training.secao.nome if training.secao else None,  
                     'created_at': training.created_at,
                     'updated_at': training.updated_at
                 }
                 for training in trainings
             ]
             
-            # Retorna os dados dos treinamentos
             return JsonResponse({"success": trainings_data}, status=200)
         
         except Categories.DoesNotExist:

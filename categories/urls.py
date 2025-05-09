@@ -6,5 +6,6 @@ urlpatterns = [
   path('', views.AddCategories, name="AddCategories"),
   path('categories/', views.GetAllCategories, name='GetAllCategories'),
   path('delete/<int:categories_id>', views.DeleteCategories, name="DeleteCategories"),
-  path("edit/<int:categories_id>", views.EditCategories, name="EditCategories")
+  path("edit/<int:categories_id>", views.EditCategories, name="EditCategories"),
+  path("categories/sections/<int:section_id>", views.GetCategorieBySection, name="GetCategoriesById")
 ]
