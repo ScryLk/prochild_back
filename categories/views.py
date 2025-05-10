@@ -15,7 +15,8 @@ def GetAllCategories(request):
                     'id': categorie.id,
                     'nome': categorie.nome,
                     'icone_id': categorie.icone_id,
-                    'secao_nome': categorie.secao.nome if categorie.secao else None,  # Adiciona o nome da seção
+                    'cor': categorie.cor,  # Adiciona o campo 'cor'
+                    'secao_nome': categorie.secao.nome if categorie.secao else None,
                     'created_at': categorie.created_at,
                     'updated_at': categorie.updated_at
                 }
@@ -33,6 +34,7 @@ def AddCategories(request):
             data = json.loads(request.body)
             nome = data.get("nome")
             icone_id = data.get("icone_id")
+            cor = data.get("cor")  # Adiciona o campo 'cor'
             secao_id = data.get("secao_id")
             if icone_id is None:
                 return JsonResponse({"error": "O campo 'icone_id' é obrigatório"}, status=400)
@@ -43,6 +45,7 @@ def AddCategories(request):
             categoria = Categories.objects.create(
                 nome=nome,
                 icone_id=icone_id,
+                cor=cor,  # Salva o campo 'cor'
                 secao=secao
             )
             return JsonResponse({"success": "Categoria criada com sucesso", "categoria_id": categoria.id}, status=201)
@@ -80,6 +83,7 @@ def EditCategories(request, categories_id):
                 return JsonResponse({"error": "Categoria não encontrada"}, status=404)
             categorie.nome = data.get("nome") or categorie.nome
             categorie.icone_id = data.get("icone_id") or categorie.icone_id
+            categorie.cor = data.get("cor") or categorie.cor  # Atualiza o campo 'cor'
             secao_id = data.get("secao_id")
             if secao_id:
                 try:
@@ -97,6 +101,7 @@ def EditCategories(request, categories_id):
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
+
 @csrf_exempt
 def GetCategorieBySection(request, section_id):
     if request.method == "GET":
@@ -107,6 +112,7 @@ def GetCategorieBySection(request, section_id):
                 {
                     'id': categorie.id,
                     'nome': categorie.nome,
+                    'cor': categorie.cor,  # Adiciona o campo 'cor'
                     'created_at': categorie.created_at,
                     'updated_at': categorie.updated_at,
                     'secao_id': categorie.secao_id,
@@ -122,6 +128,7 @@ def GetCategorieBySection(request, section_id):
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
 
+
 @csrf_exempt
 def GetCategorieById(request, categories_id):
     if request.method == "GET":
@@ -131,14 +138,14 @@ def GetCategorieById(request, categories_id):
                 "id": categorie.id,
                 "nome": categorie.nome,
                 "icone_id": categorie.icone_id,
-                "cor": categorie.cor,
-                "secao_id": categorie.secao.id,  
+                "cor": categorie.cor,  # Adiciona o campo 'cor'
+                "secao_id": categorie.secao.id,
                 "created_at": categorie.created_at,
                 "updated_at": categorie.updated_at,
             }
             return JsonResponse({"success": categorie_data}, status=200)
         except Categories.DoesNotExist:
-            return JsonResponse({"error": "Categoria não encontrado"}, status=404)
+            return JsonResponse({"error": "Categoria não encontrada"}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
     else:
