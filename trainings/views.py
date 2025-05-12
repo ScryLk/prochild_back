@@ -247,10 +247,10 @@ def GetTrainingById(request, training_id):
                 "titulo": training.titulo,
                 "descricao": training.descricao,
                 "arquivo_nome": training.arquivo_nome,
-                "arquivo_caminho": training.arquivo_caminho,
+                "arquivo_caminho": request.build_absolute_uri(training.arquivo_caminho.url) if training.arquivo_caminho else None,  # Converte para URL
                 "tamanho": training.tamanho,
-                "categoria_id": training.categoria.id,
-                "secao_id": training.secao.id,  
+                "categoria_id": training.categoria.id if training.categoria else None,
+                "secao_id": training.secao.id if training.secao else None,
                 "created_at": training.created_at,
                 "updated_at": training.updated_at,
             }
@@ -261,7 +261,8 @@ def GetTrainingById(request, training_id):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
-
+    
+    
 @csrf_exempt
 def DeleteAllTrainings(request, categorie_id):
     if request.method == "DELETE":
