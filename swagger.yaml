@@ -1,38 +1,285 @@
 openapi: 3.0.3
 info:
-  title: API de Gerenciamento de Treinamentos
-  description: API para gerenciamento de treinamentos, seções, categorias e usuários
-  version: 1.0.0
+  title: API Prochild
+  version: 1.1.0
+  description: API para gerenciamento de treinamentos, seções, categorias, usuários e centros de saúde
 servers:
-  - url: http://127.0.0.1:5000
-    description: Servidor de Desenvolvimento
+  - url: http://127.0.0.1:8000
+    description: Servidor Local
 
 paths:
-  /trainings:
+
+  ## --- USUÁRIOS ---
+  /users/:
     get:
-      summary: Obter todos os treinamentos
+      summary: Listar todos os usuários
       responses:
         '200':
-          description: Lista de treinamentos obtida com sucesso
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  trainings:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: integer }
-                        categoria_id: { type: integer }
-                        titulo: { type: string }
-                        tamanho: { type: string }
-                        descricao: { type: string }
-                        arquivo_nome: { type: string }
-                        arquivo_caminho: { type: string }
-                        created_at: { type: string }
-                        updated_at: { type: string }
+          description: Lista de usuários
+
+  /users/register/:
+    post:
+      summary: Registrar novo usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                password: { type: string }
+                role: { type: string }
+      responses:
+        '200':
+          description: Usuário registrado
+
+  /users/login/:
+    post:
+      summary: Login do usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Login realizado
+
+  /users/{user_id}/:
+    get:
+      summary: Buscar usuário por ID
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Usuário retornado
+
+  /users/edit/{user_id}:
+    put:
+      summary: Editar usuário
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                role: { type: string }
+      responses:
+        '200':
+          description: Usuário atualizado
+
+  /users/delete/{user_id}/:
+    delete:
+      summary: Deletar usuário
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Usuário deletado
+
+  /users/reset-password/:
+    post:
+      summary: Solicitar redefinição de senha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+      responses:
+        '200':
+          description: Token de recuperação enviado
+
+  /users/set-new-password/:
+    post:
+      summary: Redefinir senha com token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token: { type: string }
+                nova_senha: { type: string }
+      responses:
+        '200':
+          description: Senha redefinida com sucesso
+
+
+  ## --- SEÇÕES ---
+  /sections/sections/:
+    get:
+      summary: Listar todas as seções
+      responses:
+        '200':
+          description: Lista de seções retornada
+
+  /sections/:
+    post:
+      summary: Criar nova seção
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+      responses:
+        '200':
+          description: Seção criada com sucesso
+
+  /sections/sections/{sections_id}:
+    get:
+      summary: Buscar seção por ID
+      parameters:
+        - name: sections_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Seção retornada
+
+  /sections/edit/{sections_id}:
+    put:
+      summary: Editar seção
+      parameters:
+        - name: sections_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+      responses:
+        '200':
+          description: Seção editada
+
+  /sections/delete/{sections_id}:
+    delete:
+      summary: Deletar seção
+      parameters:
+        - name: sections_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Seção deletada
+
+
+  ## --- CATEGORIAS ---
+  /categories/:
+    post:
+      summary: Criar nova categoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                secao_id: { type: integer }
+                nome: { type: string }
+                cor: { type: string }
+                icone_id: { type: string }
+      responses:
+        '200':
+          description: Categoria criada com sucesso
+
+  /categories/sections/:
+    get:
+      summary: Listar todas as categorias
+      responses:
+        '200':
+          description: Lista de categorias
+
+  /categories/sections/{sections_id}:
+    get:
+      summary: Buscar categorias por seção
+      parameters:
+        - name: sections_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Lista filtrada
+
+  /categories/edit/{sections_id}:
+    put:
+      summary: Editar categoria
+      parameters:
+        - name: sections_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nome: { type: string }
+                cor: { type: string }
+                icone_id: { type: string }
+                secao_id: { type: integer }
+      responses:
+        '200':
+          description: Categoria atualizada
+
+  /categories/delete/{sections_id}:
+    delete:
+      summary: Deletar categoria
+      parameters:
+        - name: sections_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Categoria deletada
+
+
+  ## --- TREINAMENTOS ---
+  /trainings/trainings/:
+    get:
+      summary: Listar todos os treinamentos
+      responses:
+        '200':
+          description: Lista de treinamentos
+
+  /trainings/:
     post:
       summary: Criar novo treinamento
       requestBody:
@@ -50,17 +297,28 @@ paths:
                 arquivo_caminho: { type: string }
       responses:
         '200':
-          description: Treinamento cadastrado com sucesso
+          description: Treinamento criado com sucesso
 
-  /trainings/{trainingId}:
+  /trainings/trainings/{training_id}:
+    get:
+      summary: Buscar treinamento por ID
+      parameters:
+        - name: training_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        '200':
+          description: Detalhes do treinamento
+
+  /trainings/edit/{training_id}:
     put:
       summary: Atualizar treinamento existente
       parameters:
-        - name: trainingId
+        - name: training_id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -77,108 +335,53 @@ paths:
       responses:
         '200':
           description: Treinamento atualizado com sucesso
+
+  /trainings/delete/{training_id}:
     delete:
       summary: Deletar treinamento
       parameters:
-        - name: trainingId
+        - name: training_id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
-          description: Treinamento deletado com sucesso
+          description: Treinamento deletado
 
-  /sections:
+  /trainings/trainings/categorie/{categorie_id}:
     get:
-      summary: Obter todas as seções
-      responses:
-        '200':
-          description: Lista de seções
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  sections:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: integer }
-                        nome: { type: string }
-                        created_at: { type: string }
-                        updated_at: { type: string }
-    post:
-      summary: Criar nova seção
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                nome: { type: string }
-      responses:
-        '200':
-          description: Seção criada com sucesso
-
-  /sections/{sectionId}:
-    put:
-      summary: Atualizar seção
+      summary: Buscar treinamentos por categoria
       parameters:
-        - name: sectionId
+        - name: categorie_id
           in: path
           required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                nome: { type: string }
+          schema: { type: integer }
       responses:
         '200':
-          description: Seção atualizada com sucesso
+          description: Treinamentos por categoria
+
+  /trainings/deleteall/{categorie_id}:
     delete:
-      summary: Deletar seção
+      summary: Deletar todos os treinamentos de uma categoria
       parameters:
-        - name: sectionId
+        - name: categorie_id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
-          description: Seção deletada com sucesso
+          description: Treinamentos deletados
 
-  /categories:
+
+  ## --- CENTROS DE SAÚDE ---
+  /centros-saude/:
     get:
-      summary: Obter todas as categorias
+      summary: Listar centros de saúde do usuário autenticado
       responses:
         '200':
-          description: Lista de categorias
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  categories:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: integer }
-                        secao_id: { type: integer }
-                        nome: { type: string }
-                        icone_svg: { type: string }
-                        created_at: { type: string }
-                        updated_at: { type: string }
+          description: Lista de centros
     post:
-      summary: Criar nova categoria
+      summary: Criar novo centro de saúde
       requestBody:
         required: true
         content:
@@ -186,197 +389,49 @@ paths:
             schema:
               type: object
               properties:
-                secao_id: { type: integer }
                 nome: { type: string }
-                icone_svg: { type: string }
+                telefone: { type: string }
       responses:
         '200':
-          description: Categoria criada com sucesso
+          description: Centro criado
 
-  /categories/{categoryId}:
-    put:
-      summary: Atualizar categoria
-      parameters:
-        - name: categoryId
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                secao_id: { type: integer }
-                nome: { type: string }
-                icone_svg: { type: string }
-      responses:
-        '200':
-          description: Categoria atualizada com sucesso
-    delete:
-      summary: Deletar categoria
-      parameters:
-        - name: categoryId
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Categoria deletada com sucesso
-
-  /users/usuarios:
+  /centros-saude/{id}:
     get:
-      summary: Obter todos os usuários
-      responses:
-        '200':
-          description: Lista de usuários
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  usuarios:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id: { type: integer }
-                        nome: { type: string }
-                        email: { type: string }
-                        role: { type: string }
-                        created_at: { type: string }
-                        updated_at: { type: string }
-    post:
-      summary: Cadastrar novo usuário
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                nome: { type: string }
-                email: { type: string }
-                password_hash: { type: string }
-                role:
-                  type: string
-                  default: user
-      responses:
-        '200':
-          description: Usuário criado com sucesso
-
-  /users/usuarios/{id}:
-    get:
-      summary: Obter usuário por ID
+      summary: Buscar centro de saúde por ID
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
+          schema: { type: integer }
       responses:
         '200':
-          description: Dados do usuário
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  id: { type: integer }
-                  nome: { type: string }
-                  email: { type: string }
-                  role: { type: string }
-                  created_at: { type: string }
-                  updated_at: { type: string }
-
-    delete:
-      summary: Remover usuário
+          description: Detalhes do centro
+    put:
+      summary: Atualizar centro de saúde
       parameters:
         - name: id
           in: path
           required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Usuário deletado com sucesso
-
-  /users/login:
-    post:
-      summary: Autenticar usuário
-      description: Realiza login com email e senha
+          schema: { type: integer }
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [email, password]
               properties:
-                email:
-                  type: string
-                password:
-                  type: string
+                nome: { type: string }
+                telefone: { type: string }
       responses:
         '200':
-          description: Login bem-sucedido
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  token:
-                    type: string
-                  usuario:
-                    type: object
-                    properties:
-                      id: { type: integer }
-                      nome: { type: string }
-                      email: { type: string }
-                      role: { type: string }
-        '401':
-          description: Credenciais inválidas
-
-  /users/reset-password:
-    post:
-      summary: Solicitar redefinição de senha
-      description: Envia um token de recuperação para o email informado
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [email]
-              properties:
-                email:
-                  type: string
+          description: Centro atualizado
+    delete:
+      summary: Remover centro de saúde
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
       responses:
         '200':
-          description: Token de recuperação enviado
-
-  /users/new-password:
-    post:
-      summary: Redefinir senha
-      description: Redefine a senha do usuário com base no token de recuperação
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [token, nova_senha]
-              properties:
-                token:
-                  type: string
-                nova_senha:
-                  type: string
-      responses:
-        '200':
-          description: Senha redefinida com sucesso
-        '400':
-          description: Token inválido ou expirado
-
+          description: Centro removido
