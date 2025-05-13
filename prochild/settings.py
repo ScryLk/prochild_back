@@ -51,7 +51,8 @@ MY_APPS = [
     'users',
     'sections',
     'categories',
-    'trainings'
+    'trainings',
+    'healthcenter'
 ]
 
 MEDIA_URL = '/media/'

@@ -29,10 +29,23 @@ def Register(request):
             nome = data.get('nome')
             email = data.get('email')
             password_hash = data.get('password_hash')
-            role = data.get('role', 'user')
+            role_raw = data.get("role")
+
+            if isinstance(role_raw, bool):
+                role = "admin" if role_raw else "user"
+            elif role_raw in ["admin", "user"]:
+                role = role_raw
+            elif role_raw is None:
+                role = user.role  # mantém o valor atual se nada for enviado
+            else:
+                return JsonResponse({'error': 'Valor inválido para o campo role.'}, status=400)
+
 
             if not nome or not email or not password_hash:
                 return JsonResponse({'error': 'Campos obrigatórios não preenchidos.'}, status=400)
+
+            if role not in ['admin', 'user']:
+                return JsonResponse({'error': 'O campo role deve ser "admin" ou "user".'}, status=400)
 
             errors = policy.test(password_hash)
             if errors:
@@ -55,7 +68,6 @@ def Register(request):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
-
 @csrf_exempt
 def Login(request):
     if request.method == "POST":
@@ -194,19 +206,80 @@ def SetNewPassword(request):
 
 @csrf_exempt
 def EditUser(request, user_id):
-  if request.method == "PUT":
-     data = json.loads(request.body)
-     user = User.objects.filter(id=user_id).first()
-     user.nome = data.get("nome") or user.nome
-     user.email = data.get("email") or user.email
-     user.role = data.get("role") or user.role
-     user.save()
-     users_data = [{
-       'id': user.id,
-       'nome': user.nome,
-       'email': user.email,
-       'role': user.role,
-       'created_at': user.created_at,
-       'updated_at': user.updated_at
-      }]
-     return JsonResponse({"Success": users_data})
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            user = User.objects.filter(id=user_id).first()
+
+            if not user:
+                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+
+            # Nome e email
+            nome = data.get("nome")
+            email = data.get("email")
+
+            if nome:
+                user.nome = nome
+            if email:
+                user.email = email
+
+            # Role (aceita string ou boolean)
+            role_raw = data.get("role")
+
+            if isinstance(role_raw, bool):
+                role = "admin" if role_raw else "user"
+            elif role_raw in ["admin", "user"]:
+                role = role_raw
+            elif role_raw is None:
+                role = user.role  # mantém atual
+            else:
+                return JsonResponse({'error': 'Valor inválido para o campo role.'}, status=400)
+
+            user.role = role
+            user.save()
+
+            user_data = {
+                'id': user.id,
+                'nome': user.nome,
+                'email': user.email,
+                'role': user.role,
+                'created_at': user.created_at,
+                'updated_at': user.updated_at
+            }
+            return JsonResponse({"success": user_data}, status=200)
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    if request.method == "PUT":
+        try:
+            data = json.loads(request.body)
+            user = User.objects.filter(id=user_id).first()
+
+            if not user:
+                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+
+            role = data.get("role")
+            if role and role not in ['admin', 'user']:
+                return JsonResponse({'error': 'O campo role deve ser "admin" ou "user".'}, status=400)
+
+            user.nome = data.get("nome") or user.nome
+            user.email = data.get("email") or user.email
+            user.role = role or user.role
+            user.save()
+
+            user_data = {
+                'id': user.id,
+                'nome': user.nome,
+                'email': user.email,
+                'role': user.role,
+                'created_at': user.created_at,
+                'updated_at': user.updated_at
+            }
+            return JsonResponse({"success": user_data}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)

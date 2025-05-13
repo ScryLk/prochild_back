@@ -11,7 +11,6 @@ from users.decorators import admin_required  # Importa o decorador de admin
 def AddTrainings(request):
     if request.method == "POST":
         try:
-            # Certifique-se de usar request.FILES para lidar com arquivos
             titulo = request.POST.get("titulo")
             descricao = request.POST.get("descricao")
             categoria_id = request.POST.get("categoria_id")
