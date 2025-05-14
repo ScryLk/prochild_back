@@ -105,8 +105,7 @@ def Login(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
-@login_required(login_url='login')
+@csrf_exempt
 def GetUserById(request, user_id):
     if request.method != "GET":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
@@ -230,32 +229,128 @@ def SetNewPassword(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-
 @csrf_exempt
 def EditUser(request, user_id):
     if request.method != "PUT":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
 
     try:
-        data = json.loads(request.body)
+        # Verificar se o usuário existe
         user = User.objects.filter(id=user_id).first()
-
         if not user:
             return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
 
+        # Carregar os dados enviados no corpo da requisição
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Erro ao decodificar JSON. Verifique o formato da requisição.'}, status=400)
+
+        # Atualizar os campos permitidos
         nome = data.get("nome")
         email = data.get("email")
         role = data.get("role")
 
+        # Validar e atualizar o nome
+        if nome:
+            user.first_name = nome
+
+        # Validar e atualizar o email
+        if email:
+            if User.objects.filter(email=email).exclude(id=user_id).exists():
+                return JsonResponse({'error': 'Email já está em uso.'}, status=400)
+            user.email = email
+
+        # Validar e atualizar o role
+        if role:
+            if role not in dict(User._meta.get_field('role').choices).keys():
+                return JsonResponse({'error': 'Role inválida. Use "admin" ou "user".'}, status=400)
+            user.role = role
+
+        # Salvar as alterações
+        user.save()
+
+        # Retornar os dados atualizados do usuário
+        user_data = {
+            'id': user.id,
+            'nome': user.first_name,
+            'email': user.email,
+            'role': user.role,
+            'created_at': user.date_joined,
+            'updated_at': user.last_login
+        }
+        return JsonResponse({"success": user_data}, status=200)
+
+    except Exception as e:
+        return JsonResponse({'error': f'Erro interno: {str(e)}'}, status=500)
+    if request.method != "PUT":
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    try:
+        # Verificar se o usuário existe
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+
+        # Carregar os dados enviados no corpo da requisição
+        data = json.loads(request.body)
+
+        # Atualizar os campos permitidos
+        nome = data.get("nome")
+        email = data.get("email")
+        role = data.get("role")
+
+        # Validar o nome
+        if nome:
+            user.first_name = nome
+
+        # Validar o email
+        if email:
+            if User.objects.filter(email=email).exclude(id=user_id).exists():
+                return JsonResponse({'error': 'Email já está em uso.'}, status=400)
+            user.email = email
+
+        # Validar o role
+        if role:
+            if role not in ["admin", "user"]:
+                return JsonResponse({'error': 'Role inválida. Use "admin" ou "user".'}, status=400)
+            user.role = role
+
+        # Salvar as alterações
+        user.save()
+
+        # Retornar os dados atualizados do usuário
+        user_data = {
+            'id': user.id,
+            'nome': user.first_name,
+            'email': user.email,
+            'role': user.role,
+            'created_at': user.date_joined,
+            'updated_at': user.last_login
+        }
+        return JsonResponse({"success": user_data}, status=200)
+
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Erro ao decodificar JSON. Verifique o formato da requisição.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'error': f'Erro interno: {str(e)}'}, status=500)
+    if request.method != "PUT":
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+    try:
+        data = json.loads(request.body)
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+        nome = data.get("nome")
+        email = data.get("email")
+        role = data.get("role")
         if nome:
             user.first_name = nome
         if email:
             user.email = email
         if role in ["admin", "user"]:
             user.role = role
-
         user.save()
-
         user_data = {
             'id': user.id,
             'nome': user.first_name,
