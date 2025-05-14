@@ -23,4 +23,13 @@ def admin_required(view_func):
             return JsonResponse({'error': 'Acesso negado. Permissão de administrador necessária.'}, status=403)
         return view_func(request, *args, **kwargs)
     return _wrapped_view
+
+def login_required_json(view_func):
+    @wraps(view_func)
+    def wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Autenticação obrigatória.'}, status=401)
+        return view_func(request, *args, **kwargs)
+    return wrapped_view
+
  

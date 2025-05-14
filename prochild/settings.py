@@ -15,6 +15,7 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+AUTH_USER_MODEL = 'users.User'
 
 
 # Quick-start development settings - unsuitable for production
@@ -27,6 +28,8 @@ SECRET_KEY = 'django-insecure-u_3$1q*qh4mbw3bu-!be$7eja4t@8+47r1)d^uq8#!+4xu5lui
 DEBUG = True
 
 ALLOWED_HOSTS = ['*',]
+
+LOGIN_URL = "/users/login/"
 
 
 # Application definition
@@ -41,7 +44,7 @@ DJANGO_APPS = [
 ]
 
 
-LOGIN_URL = 'Login'
+
 
 THIRD_PARTY_APPS = [
     'corsheaders'
@@ -61,8 +64,17 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + MY_APPS
 
+# Sessões e cookies
+SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_SECURE = False
+
+# CORS (com django-cors-headers instalado)
+CORS_ALLOW_CREDENTIALS = True
+
+
 CORS_ALLOWED_ORIGINS = [
-    "http://10.252.0.17:5173",
     "http://localhost:5173"
 ]
 
@@ -86,10 +98,10 @@ CORS_ALLOW_HEADERS = [
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',  # Deve ser o primeiro middleware
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # TEM QUE VIR ANTES!
+    'corsheaders.middleware.CorsMiddleware',                 # Agora na posição correta
+    'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',

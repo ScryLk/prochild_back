@@ -1,285 +1,269 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-from django.contrib.sessions.backends.db import SessionStore
-from django.contrib.auth import password_validation
-from .models import User
-import json
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import make_password
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from .models import User
 from password_strength import PasswordPolicy
-from django.contrib.auth.hashers import check_password
+import json
 import uuid
 from datetime import datetime, timedelta
-from django.utils import timezone
-from .decorators import custom_login_required, admin_required
-from django.contrib.auth.hashers import make_password
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from functools import wraps
+from .decorators import login_required_json
 
+# Política de senha
 policy = PasswordPolicy.from_names(
-    length=8,  # Mínimo de 8 caracteres
-    uppercase=1,  # Pelo menos 1 letra maiúscula
-    numbers=1,  # Pelo menos 1 número
-    special=1,  # Pelo menos 1 caractere especial
-    nonletters=0,  # Pelo menos 0 caracteres não alfabéticos
+    length=8,
+    uppercase=1,
+    numbers=1,
+    special=1,
+    nonletters=0,
 )
 
 @csrf_exempt
 def Register(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            nome = data.get('nome')
-            email = data.get('email')
-            password_hash = data.get('password_hash')
-            role_raw = data.get("role")
-
-            if isinstance(role_raw, bool):
-                role = "admin" if role_raw else "user"
-            elif role_raw in ["admin", "user"]:
-                role = role_raw
-            elif role_raw is None:
-                role = user.role  # mantém o valor atual se nada for enviado
-            else:
-                return JsonResponse({'error': 'Valor inválido para o campo role.'}, status=400)
-
-
-            if not nome or not email or not password_hash:
-                return JsonResponse({'error': 'Campos obrigatórios não preenchidos.'}, status=400)
-
-            if role not in ['admin', 'user']:
-                return JsonResponse({'error': 'O campo role deve ser "admin" ou "user".'}, status=400)
-
-            errors = policy.test(password_hash)
-            if errors:
-                return JsonResponse({'error': 'Senha inválida. Certifique-se de que atende aos requisitos de segurança.'}, status=400)
-
-            if User.objects.filter(email=email).exists():
-                return JsonResponse({'error': 'Email já está em uso.'}, status=400)
-
-            hashed_password = make_password(password_hash)
-
-            user = User.objects.create(
-                nome=nome,
-                email=email,
-                password_hash=hashed_password,  
-                role=role
-            )
-
-            return JsonResponse({'message': 'Usuário criado com sucesso!', 'id': user.id}, status=201)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != "POST":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        nome = data.get("nome")
+        email = data.get("email")
+        password = data.get("password")
+        role = data.get("role", "user")
+
+        if not nome or not email or not password:
+            return JsonResponse({'error': 'Campos obrigatórios não preenchidos.'}, status=400)
+
+        if role not in ["admin", "user"]:
+            return JsonResponse({'error': 'Role inválida.'}, status=400)
+
+        if User.objects.filter(username=email).exists():
+            return JsonResponse({'error': 'Email já está em uso.'}, status=400)
+
+        errors = policy.test(password)
+        if errors:
+            return JsonResponse({'error': 'Senha inválida. Certifique-se de que atende aos requisitos de segurança.'}, status=400)
+
+        user = User.objects.create_user(
+            username=email,
+            email=email,
+            password=password,
+            first_name=nome,
+            role=role
+        )
+        return JsonResponse({'message': 'Usuário registrado com sucesso.', 'id': user.id}, status=201)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 @csrf_exempt
 def Login(request):
+    if request.method == "GET":
+        return JsonResponse({
+            "error": "Não autenticado. Por favor, faça login."
+        }, status=401)
+        return JsonResponse({"detail": "Você deve estar autenticado para acessar esta página."}, status=401)    
     if request.method == "POST":
         try:
             data = json.loads(request.body)
             email = data.get("email")
-            password_hash = data.get("password_hash")
-            user = User.objects.filter(email=email).first()
-            if not user:
-                return JsonResponse({'error': 'Email ou senha inválidos.'}, status=401)
+            password = data.get("password")
 
-            if not check_password(password_hash, user.password_hash):
-                return JsonResponse({'error': 'Email ou senha inválidos.'}, status=401)
-            request.session['user_id'] = user.id
-            request.session['user_nome'] = user.nome
-            request.session['user_role'] = user.role
-
-            return JsonResponse({'message': 'Usuário autenticado com sucesso!', 'id': user.id}, status=200)
+            user = authenticate(request, username=email, password=password)
+            if user is not None:
+                login(request, user)
+                return JsonResponse({
+                    "message": "Login realizado com sucesso.",
+                    "id": user.id,
+                    "name": user.first_name,
+                    "email": user.email,
+                    "role": user.role,
+                })
+            return JsonResponse({"error": "Credenciais inválidas."}, status=401)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != "POST":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
-      
 
+    try:
+        data = json.loads(request.body)
+        email = data.get("email")
+        password = data.get("password")
+
+        user = authenticate(request, username=email, password=password)
+        if user is not None:
+            login(request, user)
+            print("Usuário autenticado?", request.user.is_authenticated)
+            print("Usuário logado:", request.user.username)
+            return JsonResponse({'message': 'Login realizado com sucesso.', 'id': user.id}, status=200)
+        return JsonResponse({'error': 'Credenciais inválidas.'}, status=401)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required(login_url='login')
 def GetUserById(request, user_id):
-    if request.method == "GET":
-        try:
-            user = User.objects.filter(id=user_id).first()
-            if not user:
-                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
-            user_data = {
-                'id': user.id,
-                'nome': user.nome,
-                'email': user.email,
-                'role': user.role,
-                'created_at': user.created_at,
-                'updated_at': user.updated_at
-            }
-            return JsonResponse({'user': user_data}, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != "GET":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
-      
+
+    try:
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+
+        user_data = {
+            'id': user.id,
+            'nome': user.first_name,
+            'email': user.email,
+            'role': user.role,
+            'created_at': user.date_joined,
+            'updated_at': user.last_login
+        }
+        return JsonResponse({'user': user_data}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 @csrf_exempt
-def ReturnAllUsers(request):
-    if request.method == "GET":
-        try:
-            users = User.objects.all()
-            users_data = [
-                {
-                    'id': user.id,
-                    'nome': user.nome,
-                    'email': user.email,
-                    'role': user.role,
-                    'created_at': user.created_at,
-                    'updated_at': user.updated_at
-                }
-                for user in users
-            ]
-            return JsonResponse({'users': users_data}, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+def Logout(request):
+    if request.method != "POST":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    logout(request)
+    return JsonResponse({'message': 'Logout realizado com sucesso.'}, status=200)
+
+
+def ReturnAllUsers(request):
+    print("DEBUG AUTH:", request.user.is_authenticated, request.user)
+    print("Usuário autenticado?", request.user.is_authenticated)
+    print("Usuário logado:", request.user.username)
+    users = User.objects.all()
+    data = [{
+        "id": u.id,
+        "nome": u.first_name,
+        "email": u.email,
+        "role": u.role,
+        "created_at": u.date_joined,
+        "updated_at": u.last_login,
+    } for u in users]
+    return JsonResponse({'users': data}, status=200)
+
 
 @csrf_exempt
 def DeleteUserById(request, user_id):
-    if request.method == "DELETE": 
-        try:
-            user = User.objects.filter(id=user_id).first()
-            if not user:
-                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
-            user.delete()
-            return JsonResponse({'message': 'Usuário deletado com sucesso.'}, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != "DELETE":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    try:
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+
+        user.delete()
+        return JsonResponse({'message': 'Usuário deletado com sucesso.'}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_exempt
 def ResetPassword(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            email = data.get("email")
-            user = User.objects.filter(email=email).first()
-            if not user:
-                return JsonResponse({'error': 'E-mail inexistente.'}, status=404)
-            reset_token = str(uuid.uuid4())
-            reset_token_expires = datetime.now() + timedelta(hours=1)  
-            user.reset_token = reset_token
-            user.reset_token_expires = reset_token_expires
-            user.save()
-            return JsonResponse({
-                'message': 'Token de redefinição de senha gerado com sucesso.',
-                'reset_token': reset_token
-            }, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != "POST":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        email = data.get("email")
+
+        user = User.objects.filter(email=email).first()
+        if not user:
+            return JsonResponse({'error': 'E-mail inexistente.'}, status=404)
+
+        reset_token = str(uuid.uuid4())
+        reset_token_expires = timezone.now() + timedelta(hours=1)
+        user.reset_token = reset_token
+        user.reset_token_expires = reset_token_expires
+        user.save()
+
+        return JsonResponse({
+            'message': 'Token de redefinição de senha gerado com sucesso.',
+            'reset_token': reset_token
+        }, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_exempt
 def SetNewPassword(request):
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body)
-            reset_token = data.get("reset_token")
-            new_password = data.get("new_password")
-
-            if not reset_token or not new_password:
-                return JsonResponse({'error': 'Token e nova senha são obrigatórios.'}, status=400)
-
-            user = User.objects.filter(reset_token=reset_token).first()
-            if not user:
-                return JsonResponse({'error': 'Token inválido.'}, status=404)
-
-            if user.reset_token_expires < timezone.now():
-                return JsonResponse({'error': 'Token expirado.'}, status=400)
-
-            errors = policy.test(new_password)
-            if errors:
-                return JsonResponse({'error': 'Senha inválida. Certifique-se de que atende aos requisitos de segurança.'}, status=400)
-
-            user.password_hash = make_password(new_password)  
-            user.reset_token = None  
-            user.reset_token_expires = None 
-            user.save()
-
-            return JsonResponse({'message': 'Senha redefinida com sucesso.'}, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != "POST":
         return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        reset_token = data.get("reset_token")
+        new_password = data.get("new_password")
+
+        if not reset_token or not new_password:
+            return JsonResponse({'error': 'Token e nova senha são obrigatórios.'}, status=400)
+
+        user = User.objects.filter(reset_token=reset_token).first()
+        if not user:
+            return JsonResponse({'error': 'Token inválido.'}, status=404)
+
+        if user.reset_token_expires < timezone.now():
+            return JsonResponse({'error': 'Token expirado.'}, status=400)
+
+        errors = policy.test(new_password)
+        if errors:
+            return JsonResponse({'error': 'Senha inválida. Certifique-se de que atende aos requisitos de segurança.'}, status=400)
+
+        user.set_password(new_password)
+        user.reset_token = None
+        user.reset_token_expires = None
+        user.save()
+
+        return JsonResponse({'message': 'Senha redefinida com sucesso.'}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_exempt
 def EditUser(request, user_id):
-    if request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            user = User.objects.filter(id=user_id).first()
+    if request.method != "PUT":
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
 
-            if not user:
-                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+    try:
+        data = json.loads(request.body)
+        user = User.objects.filter(id=user_id).first()
 
-            # Nome e email
-            nome = data.get("nome")
-            email = data.get("email")
+        if not user:
+            return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
 
-            if nome:
-                user.nome = nome
-            if email:
-                user.email = email
+        nome = data.get("nome")
+        email = data.get("email")
+        role = data.get("role")
 
-            # Role (aceita string ou boolean)
-            role_raw = data.get("role")
-
-            if isinstance(role_raw, bool):
-                role = "admin" if role_raw else "user"
-            elif role_raw in ["admin", "user"]:
-                role = role_raw
-            elif role_raw is None:
-                role = user.role  # mantém atual
-            else:
-                return JsonResponse({'error': 'Valor inválido para o campo role.'}, status=400)
-
+        if nome:
+            user.first_name = nome
+        if email:
+            user.email = email
+        if role in ["admin", "user"]:
             user.role = role
-            user.save()
 
-            user_data = {
-                'id': user.id,
-                'nome': user.nome,
-                'email': user.email,
-                'role': user.role,
-                'created_at': user.created_at,
-                'updated_at': user.updated_at
-            }
-            return JsonResponse({"success": user_data}, status=200)
+        user.save()
 
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
-        return JsonResponse({'error': 'Método não permitido.'}, status=405)
-
-    if request.method == "PUT":
-        try:
-            data = json.loads(request.body)
-            user = User.objects.filter(id=user_id).first()
-
-            if not user:
-                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
-
-            role = data.get("role")
-            if role and role not in ['admin', 'user']:
-                return JsonResponse({'error': 'O campo role deve ser "admin" ou "user".'}, status=400)
-
-            user.nome = data.get("nome") or user.nome
-            user.email = data.get("email") or user.email
-            user.role = role or user.role
-            user.save()
-
-            user_data = {
-                'id': user.id,
-                'nome': user.nome,
-                'email': user.email,
-                'role': user.role,
-                'created_at': user.created_at,
-                'updated_at': user.updated_at
-            }
-            return JsonResponse({"success": user_data}, status=200)
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
-        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+        user_data = {
+            'id': user.id,
+            'nome': user.first_name,
+            'email': user.email,
+            'role': user.role,
+            'created_at': user.date_joined,
+            'updated_at': user.last_login
+        }
+        return JsonResponse({"success": user_data}, status=200)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
