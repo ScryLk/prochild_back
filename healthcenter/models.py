@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
+# Importando diretamente o modelo users.User
+from users.models import User
 
 class HealthCenter(models.Model):
     nome = models.CharField(max_length=150)
