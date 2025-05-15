@@ -245,8 +245,6 @@ def EditUser(request, user_id):
             data = json.loads(request.body)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Erro ao decodificar JSON. Verifique o formato da requisição.'}, status=400)
-
-        # Atualizar os campos permitidos
         nome = data.get("nome")
         email = data.get("email")
         role = data.get("role")

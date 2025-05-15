@@ -4,5 +4,8 @@ from . import views
 
 urlpatterns = [
   path('', views.AddHealthCenter, name='AddHealthCenter'),
-  path("healthcenter/", views.ReturnAllHealthCenters, name="ReturnAllHealthCenters")
+  path("healthcenter/", views.ReturnAllHealthCenters, name="ReturnAllHealthCenters"),
+  path("<int:healthcenter_id>", views.GetHealthCenterById, name="GetHealthCenterById"),
+  path("delete/<int:healthcenter_id>", views.DeleteHealthCenter, name="DeleteHealthCenter"),
+  path("edit/<int:healthcenter_id>/", views.EditHealthCenter, name="EditHealthCenter")
 ]
