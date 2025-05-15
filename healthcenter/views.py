@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import HealthCenter
 import json
+from .models import User
 
 @csrf_exempt
 def AddHealthCenter(request):
@@ -121,5 +122,25 @@ def EditHealthCenter(request, healthcenter_id):
             return JsonResponse({'error': 'Dados inválidos no corpo da requisição.'}, status=400)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-        
+
+def GetHealthCenterByUsers(request, user_id):
+    if request.method == "GET":
+        try:
+            healthcenters = HealthCenter.objects.filter(usuario_id=user_id)
+            if not healthcenters:
+                return JsonResponse({"error": "Usuário não tem nenhum centro de saúde cadastrado"})
+            healthcenters_data = [{
+                "id": healthcenter.id,
+                "nome": healthcenter.nome,
+                "telefone": healthcenter.telefone,
+                "created_at": healthcenter.created_at,
+                "updated_at": healthcenter.updated_at,
+                "usuario_id": healthcenter.usuario_id,
+            } for healthcenter in healthcenters ]
+            
+            return JsonResponse({"success": healthcenters_data}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
     
