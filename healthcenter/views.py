@@ -8,49 +8,39 @@ import json
 def AddHealthCenter(request):
     if request.method == "POST":
         try:
-            # Carrega os dados do corpo da requisição como JSON
             data = json.loads(request.body)
             nome = data.get("nome")  
             telefone = data.get("telefone")  
             usuario_id = data.get("usuario_id")
-
-            # Validações
             if not nome:
                 return JsonResponse({"error": "O nome é obrigatório"}, status=400)
             if not telefone:
                 return JsonResponse({"error": "O telefone é obrigatório"}, status=400)
             if not usuario_id:
                 return JsonResponse({"error": "Usuário não encontrado"}, status=400)
-
-            # Verifica se o usuário existe
             from users.models import User
             try:
                 usuario = User.objects.get(id=usuario_id)
             except User.DoesNotExist:
                 return JsonResponse({"error": "Usuário não encontrado"}, status=404)
-
-            # Cria o centro de saúde
             healthcenter = HealthCenter.objects.create(
                 nome=nome,
                 telefone=telefone,
-                usuario=usuario  # Associa o usuário ao centro de saúde
+                usuario=usuario  
             )
-            
             return JsonResponse({"success": "Centro de saúde cadastrado com sucesso"}, status=201)
-        
         except json.JSONDecodeError:
             return JsonResponse({"error": "Dados inválidos no corpo da requisição"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     if request.method == "POST":
         try:
-            # Carrega os dados do corpo da requisição como JSON
             data = json.loads(request.body)
             nome = data.get("nome")  
             telefone = data.get("telefone")  
             usuario_id = data.get("usuario_id")
 
-            # Validações
+            
             if not nome:
                 return JsonResponse({"error": "O nome é obrigatório"}, status=400)
             if not telefone:
@@ -58,15 +48,29 @@ def AddHealthCenter(request):
             if not usuario_id:
                 return JsonResponse({"error": "Usuário não encontrado"}, status=400)
             
-            # Cria o centro de saúde
             healthcenter = HealthCenter.objects.create(
                 nome=nome,
                 telefone=telefone
             )
-            
             return JsonResponse({"success": "Centro de saúde cadastrado com sucesso"}, status=201)
-        
         except json.JSONDecodeError:
             return JsonResponse({"error": "Dados inválidos no corpo da requisição"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+        
+def ReturnAllHealthCenters(request):
+    if request.method == "GET":
+        try:
+            healthcenters = HealthCenter.objects.all()
+            data = [{
+                "id": healthcenter.id,
+                "nome": healthcenter.nome,
+                "telefone": healthcenter.telefone
+            } for healthcenter in healthcenters]
+            return JsonResponse({"Centros de Saúde": data})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+            
+        
+        
+    
