@@ -1,7 +1,9 @@
 asgiref==3.8.1
 Django==5.2.1
 django-cors-headers==4.7.0
+gunicorn==23.0.0
 mysqlclient==2.2.7
+packaging==25.0
 password-strength==0.0.3.post2
 six==1.17.0
 sqlparse==0.5.3
