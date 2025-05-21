@@ -59,7 +59,7 @@ MY_APPS = [
 ]
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + MY_APPS
@@ -142,11 +142,11 @@ WSGI_APPLICATION = 'prochild.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "prochild",
-        "USER": "root",
-        "PASSWORD": "root",
-        "HOST": "127.0.0.1",
-        "PORT": "3306",
+        "NAME": "railway",  # nome do banco
+        "USER": "root",  # substitua pelo usuário do Railway
+        "PASSWORD": "gyZGJTLgJdOSYeZQsuOaLGxTFiRDTaVb",  # substitua pela senha do Railway
+        "HOST": "centerbeam.proxy.rlwy.net",
+        "PORT": "37707",
     }
 }
 
@@ -190,6 +190,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'statics')
 ]
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
