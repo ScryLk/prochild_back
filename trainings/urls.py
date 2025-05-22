@@ -9,5 +9,8 @@ urlpatterns = [
   path('edit/<int:training_id>', views.EditTraining, name="EditTraining"),
   path('trainings/<int:training_id>', views.GetTrainingById, name="GetTrainingById"),
   path('trainings/categorie/<int:categorie_id>', views.GetTrainingByCategories, name="GetTrainingByCategorie"),
-  path('deleteall/<int:categorie_id>', views.DeleteAllTrainings, name="DeleteAllTrainings")
+  path('deleteall/<int:categorie_id>', views.DeleteAllTrainings, name="DeleteAllTrainings"),
+  path('favorite/<int:user_id>/', views.GetFavoritesByUser, name='FavoriteTrainings'),
+  path('favorite/', views.FavoriteTrainings, name='FavoriteTrainings'),
+  path('unfavorite/', views.UnfavoriteTrainings, name='UnfavoriteTrainings'),
 ]

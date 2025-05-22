@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path('register/', views.Register, name='Cadastro'),
-    path('login/', views.Login, name="Login"),
+    path('login/', views.CustomLoginView.as_view(), name="LoginJWT"),  
     path('<int:user_id>/', views.GetUserById, name="GetUserById"),  
     path('', views.ReturnAllUsers, name="ReturnAllUsers"), 
     path('delete/<int:user_id>/', views.DeleteUserById, name="DeleteUserById"), 

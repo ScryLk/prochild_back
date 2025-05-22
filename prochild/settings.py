@@ -43,11 +43,16 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
-
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
 
 THIRD_PARTY_APPS = [
-    'corsheaders'
+    'corsheaders',
+    'rest_framework',
+    'rest_framework_simplejwt',
 ]
 
 MY_APPS = [
@@ -76,7 +81,9 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://prochild-front.vercel.app"
+    "https://prochild-front.vercel.app",
+    "https://prochild-front-8crdngn0e-lucas-projects-91c7742a.vercel.app",  # Adicione este domínio
+   
 ]
 
 CORS_ALLOW_CREDENTIALS = True 
@@ -99,9 +106,9 @@ CORS_ALLOW_HEADERS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # PRIMEIRO!
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',  # TEM QUE VIR ANTES!
-    'corsheaders.middleware.CorsMiddleware',                 # Agora na posição correta
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

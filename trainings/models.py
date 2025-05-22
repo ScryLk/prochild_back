@@ -2,6 +2,7 @@ from django.db import models
 from categories.models import Categories
 from django.utils.timezone import now
 from sections.models import Section
+from django.conf import settings
 
 
 class Training(models.Model):
@@ -13,8 +14,8 @@ class Training(models.Model):
         Section,
         on_delete=models.CASCADE,
         related_name="trainings",
-        null=True,  # Permite valores nulos temporariamente
-        blank=True  # Permite que o campo seja opcional no formulário
+        null=True,  
+        blank=True  
     )
     arquivo_nome = models.CharField(max_length=255, blank=True, null=True)
     arquivo_caminho = models.FileField(upload_to='trainings/files/', blank=True, null=True)  # Diretório para armazenar arquivos
@@ -26,10 +27,13 @@ class Training(models.Model):
         return self.titulo
 
 
-class Download(models.Model):
-    treinamento = models.ForeignKey(Training, on_delete=models.CASCADE, related_name='downloads')
-    dispositivo = models.CharField(max_length=50, blank=True, null=True)
-    data_download = models.DateTimeField(default=now)
+class Favorite(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorites')
+    training = models.ForeignKey(Training, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'training')
 
     def __str__(self):
-        return f"Download do treinamento: {self.treinamento.titulo}"
+        return f"{self.user} favoritou {self.training}"

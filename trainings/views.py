@@ -1,11 +1,13 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 import json
-from .models import Training
+from .models import Training, Favorite
 from categories.models import Categories
 from sections.models import Section
 from django.views.decorators.csrf import csrf_exempt
-from users.decorators import admin_required  # Importa o decorador de admin
+from users.decorators import admin_required  
+from django.contrib.auth import get_user_model
+
 
 @csrf_exempt
 def AddTrainings(request):
@@ -313,3 +315,95 @@ def GetTrainingByCategories(request, categorie_id):
             return JsonResponse({'error': str(e)}, status=500)
     else:
         return JsonResponse({"error": "Método não permitido"}, status=405)
+
+@csrf_exempt
+def GetFavoritesByUser(request, user_id):
+    if request.method == "GET":
+        try:
+            favorites = Favorite.objects.filter(user_id=user_id).select_related('training')
+            favorites_data = [
+                {
+                    'id': fav.training.id,
+                    'titulo': fav.training.titulo,
+                    'descricao': fav.training.descricao,
+                    'arquivo_nome': fav.training.arquivo_nome,
+                    'arquivo_caminho': request.build_absolute_uri(fav.training.arquivo_caminho.url) if fav.training.arquivo_caminho else None,
+                    'tamanho': fav.training.tamanho,
+                    'categoria_id': fav.training.categoria.id if fav.training.categoria else None,
+                    'categoria_nome': fav.training.categoria.nome if fav.training.categoria else None,
+                    'secao_id': fav.training.secao.id if fav.training.secao else None,
+                    'secao_nome': fav.training.secao.nome if fav.training.secao else None,
+                    'created_at': fav.training.created_at,
+                    'updated_at': fav.training.updated_at
+                }
+                for fav in favorites
+            ]
+            return JsonResponse({"success": favorites_data}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+    
+@csrf_exempt
+def FavoriteTrainings(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_id = data.get("user_id")
+            training_id = data.get("training_id")
+            if not user_id or not training_id:
+                return JsonResponse({'error': 'user_id e training_id são obrigatórios.'}, status=400)
+            
+            User = get_user_model()
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+            try:
+                training = Training.objects.get(id=training_id)
+            except Training.DoesNotExist:
+                return JsonResponse({'error': 'Treinamento não encontrado.'}, status=404)
+            
+            fav, created = Favorite.objects.get_or_create(user=user, training=training)
+            if created:
+                return JsonResponse({'success': 'Treinamento favoritado!'}, status=201)
+            else:
+                return JsonResponse({'info': 'Já está favoritado.'}, status=200)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+@csrf_exempt
+def UnfavoriteTrainings(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_id = data.get("user_id")
+            training_id = data.get("training_id")
+            if not user_id or not training_id:
+                return JsonResponse({'error': 'user_id e training_id são obrigatórios.'}, status=400)
+
+            User = get_user_model()
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return JsonResponse({'error': 'Usuário não encontrado.'}, status=404)
+            try:
+                fav = Favorite.objects.get(user=user, training_id=training_id)
+            except Favorite.DoesNotExist:
+                return JsonResponse({'error': 'Favorito não encontrado.'}, status=404)
+
+            fav.delete()
+            return JsonResponse({'success': 'Treinamento removido dos favoritos.'}, status=200)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido.'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Método não permitido.'}, status=405)
+
+
+

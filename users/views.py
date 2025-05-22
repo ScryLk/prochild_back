@@ -14,6 +14,44 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from functools import wraps
 from .decorators import login_required_json
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework import serializers
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Troca o campo username para email
+        self.fields['email'] = serializers.EmailField()
+        self.fields.pop('username')
+
+    def validate(self, attrs):
+        email = attrs.get("email")
+        password = attrs.get("password")
+
+        user = authenticate(username=email, password=password)
+        if user is None:
+            raise serializers.ValidationError("Credenciais inválidas.")
+
+        data = super().validate({
+            "username": email,
+            "password": password
+        })
+        data['name'] = user.first_name
+        data['email'] = user.email
+        data['role'] = user.role
+        return data
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['name'] = user.first_name
+        token['email'] = user.email
+        token['role'] = user.role
+        return token
+
+class CustomLoginView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 # Política de senha
 policy = PasswordPolicy.from_names(
