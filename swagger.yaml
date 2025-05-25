@@ -3,13 +3,12 @@ info:
   title: API Prochild
   version: 1.1.0
   description: API para gerenciamento de treinamentos, seções, categorias, usuários e centros de saúde
+
 servers:
   - url: http://127.0.0.1:8000
     description: Servidor Local
 
 paths:
-
-  ## --- USUÁRIOS ---
   /users/:
     get:
       summary: Listar todos os usuários
@@ -27,13 +26,17 @@ paths:
             schema:
               type: object
               properties:
-                name: { type: string }
-                email: { type: string }
-                password: { type: string }
-                role: { type: string }
+                name:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
       responses:
-        '200':
-          description: Usuário registrado
+        '201':
+          description: Usuário registrado com sucesso
 
   /users/login/:
     post:
@@ -45,8 +48,10 @@ paths:
             schema:
               type: object
               properties:
-                email: { type: string }
-                password: { type: string }
+                email:
+                  type: string
+                password:
+                  type: string
       responses:
         '200':
           description: Login realizado
@@ -54,23 +59,13 @@ paths:
   /users/{user_id}/:
     get:
       summary: Buscar usuário por ID
-      parameters:
-        - name: user_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Usuário retornado
 
-  /users/edit/{user_id}:
+  /users/edit/{user_id}/:
     put:
       summary: Editar usuário
-      parameters:
-        - name: user_id
-          in: path
-          required: true
-          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -78,9 +73,12 @@ paths:
             schema:
               type: object
               properties:
-                name: { type: string }
-                email: { type: string }
-                role: { type: string }
+                name:
+                  type: string
+                email:
+                  type: string
+                role:
+                  type: string
       responses:
         '200':
           description: Usuário atualizado
@@ -88,11 +86,6 @@ paths:
   /users/delete/{user_id}/:
     delete:
       summary: Deletar usuário
-      parameters:
-        - name: user_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Usuário deletado
@@ -107,7 +100,8 @@ paths:
             schema:
               type: object
               properties:
-                email: { type: string }
+                email:
+                  type: string
       responses:
         '200':
           description: Token de recuperação enviado
@@ -122,22 +116,20 @@ paths:
             schema:
               type: object
               properties:
-                token: { type: string }
-                nova_senha: { type: string }
+                token:
+                  type: string
+                nova_senha:
+                  type: string
       responses:
         '200':
           description: Senha redefinida com sucesso
 
-
-  ## --- SEÇÕES ---
-  /sections/sections/:
+  /sections/:
     get:
       summary: Listar todas as seções
       responses:
         '200':
           description: Lista de seções retornada
-
-  /sections/:
     post:
       summary: Criar nova seção
       requestBody:
@@ -147,31 +139,22 @@ paths:
             schema:
               type: object
               properties:
-                nome: { type: string }
+                nome:
+                  type: string
       responses:
-        '200':
+        '201':
           description: Seção criada com sucesso
 
-  /sections/sections/{sections_id}:
+  /sections/{section_id}/:
     get:
       summary: Buscar seção por ID
-      parameters:
-        - name: sections_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Seção retornada
 
-  /sections/edit/{sections_id}:
+  /sections/edit/{section_id}/:
     put:
       summary: Editar seção
-      parameters:
-        - name: sections_id
-          in: path
-          required: true
-          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -179,26 +162,25 @@ paths:
             schema:
               type: object
               properties:
-                nome: { type: string }
+                nome:
+                  type: string
       responses:
         '200':
           description: Seção editada
 
-  /sections/delete/{sections_id}:
+  /sections/delete/{section_id}/:
     delete:
       summary: Deletar seção
-      parameters:
-        - name: sections_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Seção deletada
 
-
-  ## --- CATEGORIAS ---
   /categories/:
+    get:
+      summary: Listar todas as categorias
+      responses:
+        '200':
+          description: Lista de categorias
     post:
       summary: Criar nova categoria
       requestBody:
@@ -208,41 +190,28 @@ paths:
             schema:
               type: object
               properties:
-                secao_id: { type: integer }
-                nome: { type: string }
-                cor: { type: string }
-                icone_id: { type: string }
+                secao_id:
+                  type: integer
+                nome:
+                  type: string
+                cor:
+                  type: string
+                icone_id:
+                  type: string
       responses:
-        '200':
+        '201':
           description: Categoria criada com sucesso
 
-  /categories/sections/:
-    get:
-      summary: Listar todas as categorias
-      responses:
-        '200':
-          description: Lista de categorias
-
-  /categories/sections/{sections_id}:
+  /categories/section/{section_id}/:
     get:
       summary: Buscar categorias por seção
-      parameters:
-        - name: sections_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Lista filtrada
 
-  /categories/edit/{sections_id}:
+  /categories/{category_id}/:
     put:
       summary: Editar categoria
-      parameters:
-        - name: sections_id
-          in: path
-          required: true
-          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -250,36 +219,29 @@ paths:
             schema:
               type: object
               properties:
-                nome: { type: string }
-                cor: { type: string }
-                icone_id: { type: string }
-                secao_id: { type: integer }
+                nome:
+                  type: string
+                cor:
+                  type: string
+                icone_id:
+                  type: string
+                secao_id:
+                  type: integer
       responses:
         '200':
           description: Categoria atualizada
-
-  /categories/delete/{sections_id}:
     delete:
       summary: Deletar categoria
-      parameters:
-        - name: sections_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Categoria deletada
 
-
-  ## --- TREINAMENTOS ---
-  /trainings/trainings/:
+  /trainings/:
     get:
       summary: Listar todos os treinamentos
       responses:
         '200':
           description: Lista de treinamentos
-
-  /trainings/:
     post:
       summary: Criar novo treinamento
       requestBody:
@@ -289,36 +251,32 @@ paths:
             schema:
               type: object
               properties:
-                categoria_id: { type: integer }
-                titulo: { type: string }
-                tamanho: { type: string }
-                descricao: { type: string }
-                arquivo_nome: { type: string }
-                arquivo_caminho: { type: string }
+                categoria_id:
+                  type: integer
+                titulo:
+                  type: string
+                tamanho:
+                  type: string
+                descricao:
+                  type: string
+                arquivo_nome:
+                  type: string
+                arquivo_caminho:
+                  type: string
       responses:
-        '200':
+        '201':
           description: Treinamento criado com sucesso
 
-  /trainings/trainings/{training_id}:
+  /trainings/{training_id}/:
     get:
       summary: Buscar treinamento por ID
-      parameters:
-        - name: training_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Detalhes do treinamento
 
-  /trainings/edit/{training_id}:
+  /trainings/edit/{training_id}/:
     put:
       summary: Atualizar treinamento existente
-      parameters:
-        - name: training_id
-          in: path
-          required: true
-          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -326,55 +284,44 @@ paths:
             schema:
               type: object
               properties:
-                categoria_id: { type: integer }
-                titulo: { type: string }
-                descricao: { type: string }
-                arquivo_nome: { type: string }
-                arquivo_caminho: { type: string }
-                tamanho: { type: string }
+                categoria_id:
+                  type: integer
+                titulo:
+                  type: string
+                descricao:
+                  type: string
+                arquivo_nome:
+                  type: string
+                arquivo_caminho:
+                  type: string
+                tamanho:
+                  type: string
       responses:
         '200':
           description: Treinamento atualizado com sucesso
 
-  /trainings/delete/{training_id}:
+  /trainings/delete/{training_id}/:
     delete:
       summary: Deletar treinamento
-      parameters:
-        - name: training_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Treinamento deletado
 
-  /trainings/trainings/categorie/{categorie_id}:
+  /trainings/by-category/{category_id}/:
     get:
       summary: Buscar treinamentos por categoria
-      parameters:
-        - name: categorie_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Treinamentos por categoria
 
-  /trainings/deleteall/{categorie_id}:
+  /trainings/deleteall/{category_id}/:
     delete:
       summary: Deletar todos os treinamentos de uma categoria
-      parameters:
-        - name: categorie_id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Treinamentos deletados
 
-
-  ## --- CENTROS DE SAÚDE ---
-  /centros-saude/:
+  /healthcenters/healthcenters/:
     get:
       summary: Listar centros de saúde do usuário autenticado
       responses:
@@ -389,30 +336,22 @@ paths:
             schema:
               type: object
               properties:
-                nome: { type: string }
-                telefone: { type: string }
+                nome:
+                  type: string
+                telefone:
+                  type: string
       responses:
-        '200':
+        '201':
           description: Centro criado
 
-  /centros-saude/{id}:
+  /healthcenters/{id}/:
     get:
       summary: Buscar centro de saúde por ID
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Detalhes do centro
     put:
       summary: Atualizar centro de saúde
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: integer }
       requestBody:
         required: true
         content:
@@ -420,18 +359,15 @@ paths:
             schema:
               type: object
               properties:
-                nome: { type: string }
-                telefone: { type: string }
+                nome:
+                  type: string
+                telefone:
+                  type: string
       responses:
         '200':
           description: Centro atualizado
     delete:
       summary: Remover centro de saúde
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: integer }
       responses:
         '200':
           description: Centro removido
