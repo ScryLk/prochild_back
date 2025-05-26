@@ -1,1 +1,1 @@
-web: gunicorn prochild.wsgi --log-file -
+web: gunicorn prochild.wsgi:application --log-file -
