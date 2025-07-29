@@ -10,3 +10,4 @@ urlpatterns = [
   path("edit/<int:healthcenter_id>/", views.EditHealthCenter, name="EditHealthCenter"),
   path("healthcenters/users/<int:user_id>", views.GetHealthCenterByUsers, name="GetHealthCenterByUsers")
 ]
+  

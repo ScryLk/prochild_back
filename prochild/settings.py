@@ -81,15 +81,16 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://prochild-front.vercel.app",
-    "https://prochild-front-8crdngn0e-lucas-projects-91c7742a.vercel.app",  # Adicione este domínio
-   
+    "http://localhost:5174",
+    "http://localhost:8081",
+    "http://10.252.0.13:8081",  
+    "http://10.252.0.13:8080",  
 ]
 
 CORS_ALLOW_CREDENTIALS = True 
 
 CORS_ALLOW_METHODS = [
-    "GET",
+    "GET"
     "POST",
     "PUT",
     "PATCH",
@@ -150,11 +151,14 @@ WSGI_APPLICATION = 'prochild.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "railway",  # nome do banco
-        "USER": "root",  # substitua pelo usuário do Railway
-        "PASSWORD": "gyZGJTLgJdOSYeZQsuOaLGxTFiRDTaVb",  # substitua pela senha do Railway
-        "HOST": "centerbeam.proxy.rlwy.net",
-        "PORT": "37707",
+        "NAME": "Prochild",
+        "USER": "root",
+        "PASSWORD": "root",
+        "HOST": "127.0.0.1",
+        "PORT": "3306",
+        "OPTIONS": {
+            "unix_socket": "/tmp/mysql.sock",
+        }
     }
 }
 
